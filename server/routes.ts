@@ -21,39 +21,34 @@ function getAIClient() {
   });
 }
 
-async function generatePrompt(team: TeamId): Promise<string> {
-  const ai = getAIClient();
+function getTransformationPrompt(team: TeamId): string {
   const teamData = teamInfo[team];
   
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `Genera un prompt detallado en inglés para crear una imagen de un fan de ${teamData.name} en un estadio del mundial 2026. 
-            
-El prompt debe describir:
-- La camiseta oficial del equipo (colores: ${teamData.colors.primary} y ${teamData.colors.secondary})
-- Un ambiente vibrante de estadio mundialista con multitudes celebrando
-- Iluminación cinematográfica dramática
-- El fan debe verse emocionado y apasionado
-- CRÍTICO: Los rasgos faciales de la persona deben permanecer completamente intactos y reconocibles
+  return `Edit this photo to transform the person into a World Cup football scene.
 
-Responde SOLO con el prompt en inglés, sin explicaciones adicionales. El prompt debe ser conciso (máximo 200 palabras).`,
-          },
-        ],
-      },
-    ],
-  });
+CRITICAL - DO NOT MODIFY:
+- The person's face, facial features, and expression must remain EXACTLY the same
+- The person's pose and body position must remain EXACTLY the same
+- The person's hairstyle and hair color must remain EXACTLY the same
 
-  return response.text || `A passionate ${teamData.name} fan celebrating in a vibrant World Cup 2026 stadium, wearing the official team jersey, dramatic cinematic lighting, enthusiastic crowd in background, preserve exact facial features`;
+CHANGES TO MAKE:
+1. CLOTHING: Replace the person's current clothing with an authentic ${teamData.name} national team soccer jersey with their official colors, badge, and design
+   - The jersey should look realistic and properly fitted
+   - Include authentic team colors, badges, and design details
+
+2. BACKGROUND: Transform the environment into an epic World Cup stadium setting
+   - Packed stadium with cheering fans in the background
+   - Green football pitch visible
+   - Dramatic stadium lighting
+   - Celebratory World Cup atmosphere
+
+Keep the person's identity, pose, and expression perfectly preserved while only changing their clothing and the surrounding environment.`;
 }
 
-async function transformImage(originalImageBase64: string, prompt: string): Promise<string> {
+async function transformImage(originalImageBase64: string, team: TeamId): Promise<string> {
   const ai = getAIClient();
   const base64Data = originalImageBase64.replace(/^data:image\/\w+;base64,/, "");
+  const prompt = getTransformationPrompt(team);
   
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-image",
@@ -68,16 +63,7 @@ async function transformImage(originalImageBase64: string, prompt: string): Prom
             },
           },
           {
-            text: `Transform this photo following these instructions. CRITICAL: You must preserve the person's exact facial features, face shape, and identity - do not alter the face in any way.
-
-${prompt}
-
-Only modify:
-1. The clothing - change to the team jersey described
-2. The background - add a World Cup stadium atmosphere
-3. Lighting and atmosphere - make it cinematic and celebratory
-
-Keep the original person's face, hair style, and body completely unchanged. The result should look like the same person is now in the stadium wearing the team colors.`,
+            text: prompt,
           },
         ],
       },
@@ -119,10 +105,10 @@ export async function registerRoutes(
 
       console.log(`Starting transformation for team: ${team}`);
 
-      const prompt = await generatePrompt(team as TeamId);
-      console.log("Generated prompt:", prompt.substring(0, 100) + "...");
+      const prompt = getTransformationPrompt(team as TeamId);
+      console.log("Using prompt for transformation");
 
-      const transformedImage = await transformImage(image, prompt);
+      const transformedImage = await transformImage(image, team as TeamId);
       console.log("Image transformation complete");
 
       const transformation = await storage.createTransformation({
