@@ -166,8 +166,8 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [capturedPreview, setCapturedPreview] = useState<string | null>(null);
@@ -176,11 +176,19 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
 
   const teamColors = selectedTeam ? teamInfo[selectedTeam].colors : null;
 
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
   const startCamera = useCallback(async () => {
     try {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
+      stopCamera();
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -192,7 +200,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
         audio: false,
       });
 
-      setStream(mediaStream);
+      streamRef.current = mediaStream;
       setHasPermission(true);
       setError(null);
 
@@ -204,22 +212,20 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
       setHasPermission(false);
       setError("No se pudo acceder a la cámara.");
     }
-  }, [facingMode, stream]);
+  }, [facingMode, stopCamera]);
 
   useEffect(() => {
     startCamera();
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
+      stopCamera();
     };
-  }, []);
+  }, [startCamera, stopCamera]);
 
   useEffect(() => {
     if (hasPermission) {
       startCamera();
     }
-  }, [facingMode]);
+  }, [facingMode, hasPermission, startCamera]);
 
   const switchCamera = () => {
     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
@@ -272,6 +278,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const confirmPhoto = async () => {
     if (capturedPreview) {
       setIsCompressing(true);
+      stopCamera();
       try {
         const compressedImage = await compressImage(capturedPreview);
         setCapturedImage(compressedImage);
