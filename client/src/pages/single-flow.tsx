@@ -22,7 +22,8 @@ import { TEAMS, teamInfo, type TeamId } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import backgroundImage from "@assets/Captura_de_pantalla_2026-01-05_171649_1767827562768.png";
-import trophyImage from "@assets/Base_Kickoff_2026_1767827570896.jpg";
+import trophyImage from "@assets/ChatGPT_Image_6_ene_2026,_15_32_44_1767829210783.png";
+import mileniumLogo from "@assets/logo_milenium__1767829210784.png";
 
 const teamFlags: Record<TeamId, string> = {
   mexico: "https://flagcdn.com/w80/mx.png",
@@ -736,13 +737,16 @@ export default function SingleFlowPage() {
           <img
             src={trophyImage}
             alt="Copa Mundial"
-            className="h-12 w-auto object-contain drop-shadow-lg md:h-16"
+            className="h-16 w-auto object-contain drop-shadow-lg md:h-20"
             data-testid="img-trophy"
           />
           <div className="text-right">
-            <span className="text-xs font-bold tracking-wider text-white/80 md:text-sm">
-              MILENIUM
-            </span>
+            <img
+              src={mileniumLogo}
+              alt="Milenium"
+              className="h-12 w-auto object-contain md:h-16"
+              data-testid="img-milenium-logo"
+            />
           </div>
         </header>
 
