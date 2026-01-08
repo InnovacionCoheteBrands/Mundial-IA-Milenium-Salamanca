@@ -12,7 +12,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={SingleFlowPage} />
-      <Route path="/admin-secreto" component={AdminGallery} />
+      <Route path="/tus-imagenes" component={AdminGallery} />
       <Route component={NotFound} />
     </Switch>
   );

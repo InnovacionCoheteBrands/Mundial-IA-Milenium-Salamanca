@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Check,
   Camera,
-  Upload,
   RotateCcw,
   SwitchCamera,
   AlertCircle,
@@ -17,6 +16,7 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { useApp } from "@/lib/app-context";
 import { TEAMS, teamInfo, type TeamId } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -166,7 +166,6 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const { selectedTeam, setCapturedImage } = useApp();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -254,23 +253,6 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
     setCapturedPreview(imageData);
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setError("Por favor, selecciona un archivo de imagen válido.");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setCapturedPreview(result);
-    };
-    reader.readAsDataURL(file);
-  };
-
   const retakePhoto = () => {
     setCapturedPreview(null);
     startCamera();
@@ -321,16 +303,9 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
           <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-muted p-4 text-center">
             <AlertCircle className="h-10 w-10 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">{error}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="gap-2"
-              data-testid="button-upload-fallback"
-            >
-              <Upload className="h-4 w-4" />
-              Subir Imagen
-            </Button>
+            <p className="text-xs text-muted-foreground">
+              Por favor permite el acceso a la cámara para continuar
+            </p>
           </div>
         ) : (
           <video
@@ -405,35 +380,9 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
                 Capturar Foto
               </Button>
             )}
-
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-[10px] text-muted-foreground sm:text-xs">o</span>
-              <div className="h-px flex-1 bg-border" />
-            </div>
-
-            <Button
-              variant="outline"
-              size="default"
-              className="w-full gap-2 sm:text-base"
-              onClick={() => fileInputRef.current?.click()}
-              data-testid="button-upload"
-            >
-              <Upload className="h-4 w-4" />
-              Subir Imagen
-            </Button>
           </>
         )}
       </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileUpload}
-        data-testid="input-file-upload"
-      />
     </div>
   );
 }
@@ -616,21 +565,34 @@ function ResultContent({
           )}
         </div>
       ) : (
-        <div
-          className="relative aspect-video w-full overflow-hidden rounded-lg"
-          style={{
-            borderColor: teamColors?.primary,
-            borderWidth: teamColors ? "3px" : "1px",
-            borderStyle: "solid",
-          }}
-          data-testid="card-result-image"
-        >
-          <img
-            src={displayImage!}
-            alt="Retrato mundialista"
-            className="h-full w-full object-cover"
-            data-testid="img-result"
-          />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+          <div
+            className="relative aspect-video w-full overflow-hidden rounded-lg sm:flex-1"
+            style={{
+              borderColor: teamColors?.primary,
+              borderWidth: teamColors ? "3px" : "1px",
+              borderStyle: "solid",
+            }}
+            data-testid="card-result-image"
+          >
+            <img
+              src={displayImage!}
+              alt="Retrato mundialista"
+              className="h-full w-full object-cover"
+              data-testid="img-result"
+            />
+          </div>
+          <div className="flex flex-col items-center gap-2 rounded-lg border bg-white p-3 sm:w-auto">
+            <QRCodeSVG
+              value={`${window.location.origin}/tus-imagenes`}
+              size={80}
+              level="M"
+              data-testid="qr-gallery"
+            />
+            <p className="text-center text-[10px] text-muted-foreground sm:text-xs">
+              Escanea para ver<br />todas las fotos
+            </p>
+          </div>
         </div>
       )}
 
@@ -780,7 +742,7 @@ export default function SingleFlowPage() {
             <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
           </p>
           <button
-            onClick={() => navigate("/admin-secreto")}
+            onClick={() => navigate("/tus-imagenes")}
             className="mt-1 text-[10px] text-white/20 transition-colors hover:text-white/40 sm:mt-2 sm:text-xs"
             data-testid="link-admin"
           >
