@@ -76,52 +76,62 @@ function getAIClient() {
 function getTransformationPrompt(team: TeamId): string {
   const teamData = teamInfo[team];
   
-  return `Transform this photo into a World Cup celebration scene.
+  return `Transform this photo into a World Cup celebration scene. The photo may contain 1, 2, 3, 4, 5 or more people - ALL must be preserved and transformed.
 
-=== ABSOLUTE PROHIBITIONS (NEVER DO THESE) ===
-- DO NOT remove, delete, crop, or hide ANY person from the image
-- DO NOT change, alter, replace, or modify ANY person's face
-- DO NOT change ANY person's facial features, bone structure, or face shape
-- DO NOT change skin tone, eye color, or facial hair of any person
-- DO NOT generate new faces or swap faces between people
-- DO NOT reduce the number of people in the image
-- DO NOT leave any person without the team jersey
+=== ABSOLUTE PROHIBITIONS - NEVER DO ANY OF THESE ===
+PEOPLE:
+- NEVER remove, delete, hide, or crop out ANY person
+- NEVER add new people that weren't in the original
+- NEVER reduce the count of people in the image
 
-=== IDENTITY PRESERVATION (MANDATORY FOR EVERY PERSON) ===
-For EACH person in the photo, preserve EXACTLY:
-- Their exact face as it appears in the original photo (this is the canonical reference)
-- Their exact facial expression and emotion
+FACES (CRITICAL - DO NOT MODIFY):
+- NEVER change, replace, alter, or regenerate ANY face
+- NEVER modify facial features, bone structure, jaw, nose, eyes, mouth
+- NEVER change skin tone, skin texture, or complexion
+- NEVER change eye color or eye shape
+- NEVER remove or add facial hair (beard, mustache, stubble)
+- NEVER generate synthetic or AI faces - use ONLY the original faces
+- NEVER swap faces between people
+
+BODIES (CRITICAL - DO NOT MODIFY):
+- NEVER change body type, body shape, or body size
+- NEVER change height proportions between people
+- NEVER change weight or build (thin, average, heavy)
+- NEVER change shoulder width or body frame
+- NEVER alter arms, hands, or body posture significantly
+
+=== WHAT TO PRESERVE FOR EACH PERSON ===
+For EVERY person (whether 1 person or 5+ people), keep EXACTLY:
+- Their EXACT face pixel-for-pixel from the input photo
+- Their exact body type, size, and proportions
 - Their exact skin tone and complexion
-- Their exact hairstyle, hair color, and hair length
-- Their exact facial hair (beard, mustache) if present
-- Their exact glasses or accessories if visible
-- Their exact body position and pose
-The faces in the input image are the ONLY acceptable faces in the output.
+- Their exact hairstyle, hair color, hair length
+- Their exact pose and body position
+- Their glasses, jewelry, or accessories if visible
+- Their relative positions to each other
 
-=== MANDATORY EDITS (APPLY TO ALL PEOPLE) ===
-1. JERSEY FOR EVERY PERSON:
-   - Change the clothing of EVERY single person to the ${teamData.name} national team jersey
-   - No exceptions - every person must wear the ${teamData.name} jersey
-   - No person should remain in their original clothing
-   - Jersey colors: ${teamData.colors.primary} primary, ${teamData.colors.secondary} secondary
+=== ONLY THESE CHANGES ARE ALLOWED ===
+1. CLOTHING ONLY:
+   - Replace ONLY the clothing with ${teamData.name} national team jersey
+   - Every single person gets the jersey - NO EXCEPTIONS
+   - Jersey must fit naturally on each person's actual body
 
-2. TROPHY (ONE PERSON ONLY):
-   - Add the FIFA World Cup Trophy (golden trophy with globe)
-   - Only ONE person holds the trophy at chest or waist level
-   - Other people celebrate naturally around the trophy holder
+2. ONE TROPHY:
+   - Add FIFA World Cup Trophy held by ONE person
+   - Other people celebrate around naturally
 
-3. BACKGROUND:
-   - Replace background with a World Cup stadium setting
-   - Include packed stadium, green pitch, dramatic lighting, confetti
+3. BACKGROUND ONLY:
+   - Replace background with World Cup stadium
+   - Stadium, green pitch, lights, confetti
 
-=== FINAL VERIFICATION ===
-Before outputting, verify:
-- Same number of people as input image
-- Every face is IDENTICAL to the input photo
-- Every person wears the ${teamData.name} jersey
-- No original clothing visible on anyone
+=== VERIFICATION CHECKLIST ===
+Count people in input → Output must have SAME count
+Each face → Must be IDENTICAL to input (not similar - IDENTICAL)
+Each body → Same type/size as input
+Each person → Wearing ${teamData.name} jersey
+Original clothing → None visible
 
-If any rule conflicts, ALWAYS prioritize preserving every person's exact face and keeping all people in the image.`;
+PRIORITY: If anything conflicts, preserve faces and bodies EXACTLY as they appear in the input photo.`;
 }
 
 async function transformImage(originalImageBase64: string, team: TeamId): Promise<string> {

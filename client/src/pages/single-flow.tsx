@@ -324,7 +324,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
             autoPlay
             playsInline
             muted
-            className={`h-full w-full object-cover ${facingMode === "user" ? "scale-x-[-1]" : ""}`}
+            className={`h-full w-full ${isMobile ? "object-contain bg-black" : "object-cover"} ${facingMode === "user" ? "scale-x-[-1]" : ""}`}
             data-testid="video-camera"
           />
         )}
@@ -502,21 +502,41 @@ function ResultContent({
   const hasError = error !== null || !transformedImage;
   const displayImage = transformedImage || capturedImage;
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const imageToDownload = transformedImage || capturedImage;
     if (!imageToDownload) return;
 
-    const link = document.createElement("a");
-    link.href = imageToDownload;
-    link.download = `fan-mundialista-${selectedTeam || "foto"}.jpg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const response = await fetch(imageToDownload);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `fan-mundialista-${selectedTeam || "foto"}.jpg`;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
 
-    toast({
-      title: "Imagen descargada",
-      description: "Tu retrato mundialista se ha guardado correctamente.",
-    });
+      toast({
+        title: "Imagen descargada",
+        description: "Tu retrato mundialista se ha guardado correctamente.",
+      });
+    } catch (err) {
+      console.error("Download error:", err);
+      const link = document.createElement("a");
+      link.href = imageToDownload;
+      link.download = `fan-mundialista-${selectedTeam || "foto"}.jpg`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const handleShare = async () => {
