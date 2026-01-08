@@ -206,6 +206,20 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/images", async (req, res) => {
+    try {
+      res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+      res.set("Pragma", "no-cache");
+      res.set("Expires", "0");
+      res.set("Surrogate-Control", "no-store");
+      const transformations = await storage.getAllTransformations();
+      res.json(transformations);
+    } catch (error) {
+      console.error("Error fetching images:", error);
+      res.status(500).json({ error: "Failed to fetch images" });
+    }
+  });
+
   app.get("/api/transformations/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

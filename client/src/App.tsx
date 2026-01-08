@@ -6,12 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider } from "@/lib/app-context";
 import SingleFlowPage from "@/pages/single-flow";
 import AdminGallery from "@/pages/admin-gallery";
+import ImagesGallery from "@/pages/images-gallery";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={SingleFlowPage} />
+      <Route path="/images" component={ImagesGallery} />
       <Route path="/tus-imagenes" component={AdminGallery} />
       <Route component={NotFound} />
     </Switch>
