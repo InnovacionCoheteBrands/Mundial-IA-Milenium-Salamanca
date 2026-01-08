@@ -76,34 +76,52 @@ function getAIClient() {
 function getTransformationPrompt(team: TeamId): string {
   const teamData = teamInfo[team];
   
-  return `Edit this photo to transform everyone into a World Cup football celebration scene.
+  return `Transform this photo into a World Cup celebration scene.
 
-CRITICAL RULES - MUST FOLLOW:
-- NEVER remove, crop out, or hide ANY person from the image
-- If there are multiple people, ALL of them MUST remain visible in the final image
-- Each person's face, facial features, and expression must remain EXACTLY the same
-- Each person's hairstyle and hair color must remain EXACTLY the same
-- Preserve the original number of people in the photo
+=== ABSOLUTE PROHIBITIONS (NEVER DO THESE) ===
+- DO NOT remove, delete, crop, or hide ANY person from the image
+- DO NOT change, alter, replace, or modify ANY person's face
+- DO NOT change ANY person's facial features, bone structure, or face shape
+- DO NOT change skin tone, eye color, or facial hair of any person
+- DO NOT generate new faces or swap faces between people
+- DO NOT reduce the number of people in the image
+- DO NOT leave any person without the team jersey
 
-CHANGES TO MAKE:
-1. CLOTHING FOR ALL PEOPLE: Replace EVERY person's clothing with an authentic ${teamData.name} national team soccer jersey
-   - ALL people in the image must wear the ${teamData.name} jersey
-   - Include authentic team colors, badges, and design details
-   - Each jersey should look realistic and properly fitted on each person
+=== IDENTITY PRESERVATION (MANDATORY FOR EVERY PERSON) ===
+For EACH person in the photo, preserve EXACTLY:
+- Their exact face as it appears in the original photo (this is the canonical reference)
+- Their exact facial expression and emotion
+- Their exact skin tone and complexion
+- Their exact hairstyle, hair color, and hair length
+- Their exact facial hair (beard, mustache) if present
+- Their exact glasses or accessories if visible
+- Their exact body position and pose
+The faces in the input image are the ONLY acceptable faces in the output.
 
-2. TROPHY: At least ONE person should be holding the FIFA World Cup Trophy (golden trophy with globe held by two figures)
-   - Only one person needs to hold the trophy, others can celebrate around them
-   - The trophy holder should hold it close to their chest or at waist level
-   - Keep natural body postures - do not dramatically change anyone's pose
-   - Make the trophy look realistic and properly lit
+=== MANDATORY EDITS (APPLY TO ALL PEOPLE) ===
+1. JERSEY FOR EVERY PERSON:
+   - Change the clothing of EVERY single person to the ${teamData.name} national team jersey
+   - No exceptions - every person must wear the ${teamData.name} jersey
+   - No person should remain in their original clothing
+   - Jersey colors: ${teamData.colors.primary} primary, ${teamData.colors.secondary} secondary
 
-3. BACKGROUND: Transform the environment into an epic World Cup stadium setting
-   - Packed stadium with cheering fans in the background
-   - Green football pitch visible
-   - Dramatic stadium lighting
-   - Celebratory World Cup atmosphere with confetti
+2. TROPHY (ONE PERSON ONLY):
+   - Add the FIFA World Cup Trophy (golden trophy with globe)
+   - Only ONE person holds the trophy at chest or waist level
+   - Other people celebrate naturally around the trophy holder
 
-Keep EVERY person's identity and face perfectly preserved. Transform the entire group into World Cup champions celebrating together.`;
+3. BACKGROUND:
+   - Replace background with a World Cup stadium setting
+   - Include packed stadium, green pitch, dramatic lighting, confetti
+
+=== FINAL VERIFICATION ===
+Before outputting, verify:
+- Same number of people as input image
+- Every face is IDENTICAL to the input photo
+- Every person wears the ${teamData.name} jersey
+- No original clothing visible on anyone
+
+If any rule conflicts, ALWAYS prioritize preserving every person's exact face and keeping all people in the image.`;
 }
 
 async function transformImage(originalImageBase64: string, team: TeamId): Promise<string> {
