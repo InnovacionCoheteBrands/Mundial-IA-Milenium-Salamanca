@@ -173,6 +173,8 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const [capturedPreview, setCapturedPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
+  
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const teamColors = selectedTeam ? teamInfo[selectedTeam].colors : null;
 
@@ -190,13 +192,22 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
     try {
       stopCamera();
 
+      const videoConstraints = isMobile
+        ? {
+            facingMode,
+            width: { ideal: 1080 },
+            height: { ideal: 1920 },
+            aspectRatio: { ideal: 9 / 16 },
+          }
+        : {
+            facingMode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            aspectRatio: { ideal: 16 / 9 },
+          };
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode,
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-          aspectRatio: { ideal: 16 / 9 },
-        },
+        video: videoConstraints,
         audio: false,
       });
 
@@ -212,7 +223,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
       setHasPermission(false);
       setError("No se pudo acceder a la cámara.");
     }
-  }, [facingMode, stopCamera]);
+  }, [facingMode, stopCamera, isMobile]);
 
   useEffect(() => {
     startCamera();
@@ -279,12 +290,12 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
           Captura Tu Foto
         </h2>
         <p className="text-xs text-muted-foreground sm:text-sm">
-          Toma una foto horizontal para transformarla
+          {isMobile ? "Toma una foto vertical para transformarla" : "Toma una foto horizontal para transformarla"}
         </p>
       </div>
 
       <div
-        className="relative aspect-video w-full overflow-hidden rounded-md sm:rounded-lg"
+        className={`relative w-full overflow-hidden rounded-md sm:rounded-lg ${isMobile ? "aspect-[3/4]" : "aspect-video"}`}
         style={{
           borderColor: teamColors?.primary,
           borderWidth: teamColors ? "3px" : "1px",
