@@ -16,7 +16,6 @@ import {
   Loader2,
   Sparkles,
 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 import { useApp } from "@/lib/app-context";
 import { TEAMS, teamInfo, type TeamId } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -565,34 +564,21 @@ function ResultContent({
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
-          <div
-            className="relative aspect-video w-full overflow-hidden rounded-lg sm:flex-1"
-            style={{
-              borderColor: teamColors?.primary,
-              borderWidth: teamColors ? "3px" : "1px",
-              borderStyle: "solid",
-            }}
-            data-testid="card-result-image"
-          >
-            <img
-              src={displayImage!}
-              alt="Retrato mundialista"
-              className="h-full w-full object-cover"
-              data-testid="img-result"
-            />
-          </div>
-          <div className="flex flex-col items-center gap-2 rounded-lg border bg-white p-3 sm:w-auto">
-            <QRCodeSVG
-              value={`${window.location.origin}/tus-imagenes`}
-              size={80}
-              level="M"
-              data-testid="qr-gallery"
-            />
-            <p className="text-center text-[10px] text-muted-foreground sm:text-xs">
-              Escanea para ver<br />todas las fotos
-            </p>
-          </div>
+        <div
+          className="relative aspect-video w-full overflow-hidden rounded-lg"
+          style={{
+            borderColor: teamColors?.primary,
+            borderWidth: teamColors ? "3px" : "1px",
+            borderStyle: "solid",
+          }}
+          data-testid="card-result-image"
+        >
+          <img
+            src={displayImage!}
+            alt="Retrato mundialista"
+            className="h-full w-full object-cover"
+            data-testid="img-result"
+          />
         </div>
       )}
 
