@@ -130,7 +130,7 @@ async function transformImage(originalImageBase64: string, team: TeamId): Promis
   const prompt = getTransformationPrompt(team);
   
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-image",
+    model: "gemini-3-pro-image-preview",
     contents: [
       {
         role: "user",
