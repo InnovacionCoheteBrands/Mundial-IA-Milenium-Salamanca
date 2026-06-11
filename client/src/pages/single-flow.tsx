@@ -17,6 +17,7 @@ import {
   Sparkles,
   Trophy,
   Gift,
+  ImagePlus,
 } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { TEAMS, teamInfo, type TeamId } from "@shared/schema";
@@ -104,11 +105,11 @@ function IntroContent({ onContinue }: { onContinue: () => void }) {
 
       <div className="space-y-2">
         <h2 className="text-xl font-black uppercase tracking-tight text-white sm:text-2xl md:text-3xl">
-          Activa Tu Cámara
+          Tu Foto del Mundial
         </h2>
         <p className="max-w-sm text-xs text-muted-foreground sm:text-sm md:text-base">
-          Necesitamos acceso a tu cámara para capturar tu foto y transformarla
-          en un momento épico del Mundial.
+          Toma una selfie con tu cámara o sube una foto desde tu galería y
+          te convertiremos en leyenda del Mundial.
         </p>
       </div>
 
@@ -116,15 +117,20 @@ function IntroContent({ onContinue }: { onContinue: () => void }) {
         <span>⚽</span> Visita y Gana <span>⚽</span>
       </PromoBadge>
 
-      <Button
-        size="lg"
-        onClick={onContinue}
-        className="gap-2 bg-red-600 px-6 py-5 text-base font-bold uppercase tracking-wide text-white hover:bg-red-700 sm:px-8 sm:py-6 sm:text-lg"
-        data-testid="button-comenzar"
-      >
-        <Camera className="h-5 w-5" />
-        Activar Cámara
-      </Button>
+      <div className="flex w-full max-w-xs flex-col gap-2">
+        <Button
+          size="lg"
+          onClick={onContinue}
+          className="w-full gap-2 bg-red-600 px-6 py-5 text-base font-bold uppercase tracking-wide text-white hover:bg-red-700 sm:py-6 sm:text-lg"
+          data-testid="button-comenzar"
+        >
+          <Camera className="h-5 w-5" />
+          ¡Comenzar!
+        </Button>
+        <p className="text-[11px] text-white/40">
+          Puedes usar cámara o subir foto desde galería
+        </p>
+      </div>
     </div>
   );
 }
@@ -200,15 +206,16 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   const [capturedPreview, setCapturedPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
-  
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const [cameraAvailable, setCameraAvailable] = useState(true);
 
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const teamColors = selectedTeam ? teamInfo[selectedTeam].colors : null;
 
   const stopCamera = useCallback(() => {
@@ -222,27 +229,43 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   }, []);
 
   const startCamera = useCallback(async () => {
+    // Check if getUserMedia is available (requires HTTPS or localhost)
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraAvailable(false);
+      setHasPermission(false);
+      setError("La cámara no está disponible. Sube una foto desde tu galería.");
+      return;
+    }
+
     try {
       stopCamera();
 
-      const videoConstraints = isMobile
-        ? {
-            facingMode,
-            width: { ideal: 1080 },
-            height: { ideal: 1920 },
-            aspectRatio: { ideal: 9 / 16 },
-          }
-        : {
-            facingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            aspectRatio: { ideal: 16 / 9 },
-          };
+      // Try progressively simpler constraints to maximise compatibility
+      const constraintAttempts = [
+        // Attempt 1: preferred quality without aspectRatio (aspectRatio causes failures on many Android devices)
+        { facingMode, width: { ideal: 1080 }, height: { ideal: 1920 } },
+        // Attempt 2: just facingMode
+        { facingMode },
+        // Attempt 3: any camera
+        true,
+      ] as MediaTrackConstraints[];
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: videoConstraints,
-        audio: false,
-      });
+      let mediaStream: MediaStream | null = null;
+      let lastError: unknown = null;
+
+      for (const constraints of constraintAttempts) {
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: constraints,
+            audio: false,
+          });
+          break;
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
+      if (!mediaStream) throw lastError;
 
       streamRef.current = mediaStream;
       setHasPermission(true);
@@ -251,25 +274,23 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Camera error:", err);
       setHasPermission(false);
-      setError("No se pudo acceder a la cámara.");
+      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+        setError("Permiso de cámara denegado. Actívalo en ajustes o sube una foto.");
+      } else if (err?.name === "NotFoundError" || err?.name === "DevicesNotFoundError") {
+        setError("No se encontró cámara. Sube una foto desde tu galería.");
+      } else {
+        setError("No se pudo acceder a la cámara. Sube una foto desde tu galería.");
+      }
     }
-  }, [facingMode, stopCamera, isMobile]);
+  }, [facingMode, stopCamera]);
 
   useEffect(() => {
     startCamera();
-    return () => {
-      stopCamera();
-    };
+    return () => stopCamera();
   }, [startCamera, stopCamera]);
-
-  useEffect(() => {
-    if (hasPermission) {
-      startCamera();
-    }
-  }, [facingMode, hasPermission, startCamera]);
 
   const switchCamera = () => {
     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
@@ -277,11 +298,9 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
-
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-
     if (!ctx) return;
 
     canvas.width = video.videoWidth;
@@ -293,38 +312,67 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
     }
 
     ctx.drawImage(video, 0, 0);
-    const imageData = canvas.toDataURL("image/jpeg", 0.9);
-    setCapturedPreview(imageData);
+    setCapturedPreview(canvas.toDataURL("image/jpeg", 0.9));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      if (result) {
+        stopCamera();
+        setCapturedPreview(result);
+      }
+    };
+    reader.readAsDataURL(file);
+    // Reset so the same file can be re-selected
+    e.target.value = "";
   };
 
   const retakePhoto = () => {
     setCapturedPreview(null);
-    startCamera();
-  };
-
-  const confirmPhoto = async () => {
-    if (capturedPreview) {
-      setIsCompressing(true);
-      stopCamera();
-      try {
-        const compressedImage = await compressImage(capturedPreview);
-        setCapturedImage(compressedImage);
-        onContinue();
-      } finally {
-        setIsCompressing(false);
-      }
+    if (cameraAvailable && hasPermission !== false) {
+      startCamera();
     }
   };
 
+  const confirmPhoto = async () => {
+    if (!capturedPreview) return;
+    setIsCompressing(true);
+    stopCamera();
+    try {
+      const compressedImage = await compressImage(capturedPreview);
+      setCapturedImage(compressedImage);
+      onContinue();
+    } finally {
+      setIsCompressing(false);
+    }
+  };
+
+  const showCamera = hasPermission === true && !capturedPreview;
+  const showError = hasPermission === false && !capturedPreview;
+
   return (
     <div className="flex flex-col gap-3 p-3 sm:gap-4 sm:p-4 md:p-6">
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileUpload}
+        data-testid="input-file-upload"
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-black uppercase tracking-tight text-white sm:text-lg md:text-xl">
             Captura Tu Foto
           </h2>
           <p className="text-xs text-muted-foreground sm:text-sm">
-            {isMobile ? "Toma una foto vertical para transformarla" : "Toma una foto horizontal para transformarla"}
+            {isMobile ? "Toma o sube una foto para transformarla" : "Captura o sube una foto"}
           </p>
         </div>
         <RedBadge>
@@ -348,13 +396,18 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
             className="h-full w-full object-cover"
             data-testid="img-captured-preview"
           />
-        ) : hasPermission === false ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-green-950/80 p-4 text-center">
-            <AlertCircle className="h-10 w-10 text-red-400" />
-            <p className="text-sm text-white/70">{error}</p>
-            <p className="text-xs text-white/50">
-              Por favor permite el acceso a la cámara para continuar
-            </p>
+        ) : showError ? (
+          <div
+            className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-3 bg-green-950/80 p-4 text-center"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <ImagePlus className="h-12 w-12 text-green-400/80" />
+            <p className="text-sm font-semibold text-white/80">{error}</p>
+            <p className="text-xs text-green-400/70">Toca aquí para subir una foto</p>
+          </div>
+        ) : hasPermission === null ? (
+          <div className="flex h-full w-full items-center justify-center bg-black">
+            <Loader2 className="h-8 w-8 animate-spin text-green-400" />
           </div>
         ) : (
           <video
@@ -367,7 +420,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
           />
         )}
 
-        {hasPermission && !capturedPreview && (
+        {showCamera && (
           <Button
             variant="ghost"
             size="icon"
@@ -394,7 +447,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
               data-testid="button-retake"
             >
               <RotateCcw className="h-4 w-4" />
-              Volver
+              {cameraAvailable ? "Volver" : "Otra foto"}
             </Button>
             <Button
               size="default"
@@ -417,8 +470,8 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
             </Button>
           </div>
         ) : (
-          <>
-            {hasPermission && (
+          <div className="flex flex-col gap-2">
+            {showCamera && (
               <Button
                 size="default"
                 className="w-full gap-2 bg-red-600 font-bold uppercase tracking-wide text-white hover:bg-red-700 sm:text-base"
@@ -429,7 +482,17 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
                 Capturar Foto
               </Button>
             )}
-          </>
+            <Button
+              size="default"
+              variant="outline"
+              className="w-full gap-2 border-green-600/50 bg-white/5 font-semibold text-white hover:bg-white/10 sm:text-base"
+              onClick={() => fileInputRef.current?.click()}
+              data-testid="button-upload"
+            >
+              <ImagePlus className="h-5 w-5" />
+              Subir foto de galería
+            </Button>
+          </div>
         )}
       </div>
     </div>
