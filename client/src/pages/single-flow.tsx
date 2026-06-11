@@ -23,6 +23,7 @@ import { TEAMS, teamInfo, type TeamId } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import trophyImage from "@assets/ChatGPT_Image_6_ene_2026,_15_32_44_1767829210783.png";
+import worldcupBg from "@assets/generated_images/worldcup_background.png";
 import mileniumLogo from "@assets/logo_milenium__1767829210784.png";
 import qrGallery from "@assets/qr-images-gallery.png";
 
@@ -806,10 +807,11 @@ export default function SingleFlowPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      <div className="fixed inset-0 bg-[#071a0e]" />
-      <div className="fixed inset-0 bg-gradient-to-b from-green-950 via-[#0a2112] to-[#050f08]" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,_rgba(21,128,61,0.35)_0%,_transparent_70%)]" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_80%,_rgba(22,101,52,0.2)_0%,_transparent_60%)]" />
+      <div
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${worldcupBg})` }}
+      />
+      <div className="fixed inset-0 bg-gradient-to-b from-black/72 via-green-950/60 to-black/80" />
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-4 md:px-8 md:py-6">

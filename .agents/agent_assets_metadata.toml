@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "E4l2fWUoqEDOo1S9LAVBA"
+uri = "file://attached_assets/generated_images/worldcup_background.png"
+type = "image"
+title = "worldcup background brushstrokes"
