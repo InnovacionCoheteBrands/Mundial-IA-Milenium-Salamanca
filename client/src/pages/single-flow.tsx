@@ -22,7 +22,6 @@ import { useApp } from "@/lib/app-context";
 import { TEAMS, teamInfo, type TeamId } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import backgroundImage from "@assets/Captura_de_pantalla_2026-01-05_171649_1767827562768.png";
 import trophyImage from "@assets/ChatGPT_Image_6_ene_2026,_15_32_44_1767829210783.png";
 import mileniumLogo from "@assets/logo_milenium__1767829210784.png";
 import qrGallery from "@assets/qr-images-gallery.png";
@@ -675,7 +674,7 @@ function ResultContent({
 
             {/* Decorative soccer ball overlay — bottom-left */}
             <div
-              className="pointer-events-none absolute -bottom-4 -left-4 select-none text-6xl opacity-15 sm:text-7xl"
+              className="pointer-events-none absolute -bottom-4 -left-4 select-none text-6xl opacity-[.15] sm:text-7xl"
               aria-hidden="true"
             >
               ⚽
@@ -807,12 +806,10 @@ export default function SingleFlowPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      <div
-        className="fixed inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${backgroundImage})` }}
-      />
-      <div className="fixed inset-0 bg-gradient-to-b from-green-950/88 via-green-900/70 to-green-950/92" />
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(22,101,52,0.3)_0%,_transparent_70%)]" />
+      <div className="fixed inset-0 bg-[#071a0e]" />
+      <div className="fixed inset-0 bg-gradient-to-b from-green-950 via-[#0a2112] to-[#050f08]" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,_rgba(21,128,61,0.35)_0%,_transparent_70%)]" />
+      <div className="fixed inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_80%,_rgba(22,101,52,0.2)_0%,_transparent_60%)]" />
 
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-4 md:px-8 md:py-6">
