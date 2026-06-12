@@ -23,10 +23,12 @@ import { useApp } from "@/lib/app-context";
 import { TEAMS, teamInfo, type TeamId } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { QRCodeSVG } from "qrcode.react";
 import trophyImage from "@assets/ChatGPT_Image_6_ene_2026,_15_32_44_1767829210783.png";
 import worldcupBg from "@assets/generated_images/worldcup_background.png";
 import mileniumLogo from "@assets/logo_milenium__1767829210784.png";
-import qrGallery from "@assets/qr-images-gallery.png";
+
+const GALLERY_URL = `${window.location.origin}/images`;
 
 const teamFlags: Record<TeamId, string> = {
   mexico: "https://flagcdn.com/w80/mx.png",
@@ -765,12 +767,15 @@ function ResultContent({
             </div>
           </div>
           <div className="flex flex-col items-center gap-2 rounded-xl border border-green-700/40 bg-green-950/60 p-3 backdrop-blur-sm sm:w-auto">
-            <img
-              src={qrGallery}
-              alt="QR Galería"
-              className="h-20 w-20 rounded-lg sm:h-24 sm:w-24"
-              data-testid="img-qr-gallery"
-            />
+            <div className="rounded-lg overflow-hidden" data-testid="img-qr-gallery">
+              <QRCodeSVG
+                value={GALLERY_URL}
+                size={88}
+                bgColor="#052e16"
+                fgColor="#4ade80"
+                level="M"
+              />
+            </div>
             <p className="text-center text-[10px] font-semibold uppercase tracking-wide text-green-400 sm:text-xs">
               Escanea para ver<br />todas las fotos
             </p>
