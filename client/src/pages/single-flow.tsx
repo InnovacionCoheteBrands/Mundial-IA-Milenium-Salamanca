@@ -869,38 +869,41 @@ export default function SingleFlowPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
+    <div className="relative h-[100dvh] w-full overflow-hidden">
       <div
         className="fixed inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${worldcupBg})` }}
       />
       <div className="fixed inset-0 bg-gradient-to-b from-black/72 via-green-950/60 to-black/80" />
 
-      <div className="relative z-10 flex min-h-screen flex-col">
-        <header className="flex items-center justify-between gap-2 px-3 py-2 sm:px-4 sm:py-4 md:px-8 md:py-6">
+      <div className="relative z-10 flex h-full flex-col">
+        {/* Header — compact on mobile */}
+        <header className="flex shrink-0 items-center justify-between gap-2 px-3 py-1.5 sm:px-4 sm:py-3 md:px-8 md:py-5">
           <img
             src={trophyImage}
             alt="Copa Mundial"
-            className="h-10 w-auto object-contain drop-shadow-lg sm:h-14 md:h-20"
+            className="h-8 w-auto object-contain drop-shadow-lg sm:h-12 md:h-18"
             data-testid="img-trophy"
           />
           <div className="text-right">
             <img
               src={mileniumLogo}
               alt="Milenium"
-              className="h-8 w-auto object-contain sm:h-10 md:h-16"
+              className="h-7 w-auto object-contain sm:h-9 md:h-14"
               data-testid="img-milenium-logo"
             />
           </div>
         </header>
 
-        <main className="flex flex-1 flex-col items-center justify-center px-2 py-2 sm:px-4 sm:py-4 md:py-8">
-          <div className="mb-3 text-center sm:mb-5 md:mb-7">
-            <p className="mb-1 text-xs italic font-medium text-green-300/80 sm:text-sm">
+        {/* Main — takes all remaining height, scrollable on very small screens */}
+        <main className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-2 pb-1 pt-0 sm:px-4 sm:pb-2">
+          {/* Title block — tighter on mobile */}
+          <div className="mb-2 shrink-0 text-center sm:mb-4 md:mb-6">
+            <p className="mb-0.5 text-[10px] italic font-medium text-green-300/80 sm:text-xs md:text-sm">
               El próximo gol es tuyo —
             </p>
             <h1
-              className="text-2xl font-black uppercase tracking-tight text-white drop-shadow-2xl sm:text-3xl md:text-5xl lg:text-6xl"
+              className="text-xl font-black uppercase tracking-tight text-white drop-shadow-2xl sm:text-3xl md:text-5xl lg:text-6xl"
               data-testid="text-headline"
             >
               LEYENDA DEL{" "}
@@ -908,7 +911,7 @@ export default function SingleFlowPage() {
                 MUNDIAL
               </span>
             </h1>
-            <div className="mx-auto my-2 flex items-center justify-center gap-2 sm:my-3">
+            <div className="mx-auto my-1.5 flex items-center justify-center gap-2 sm:my-2">
               <div className="h-px w-8 bg-gradient-to-r from-transparent to-green-500 sm:w-12" />
               <PromoBadge>
                 ⚽ Bonos Futboleros ⚽
@@ -916,27 +919,29 @@ export default function SingleFlowPage() {
               <div className="h-px w-8 bg-gradient-to-l from-transparent to-green-500 sm:w-12" />
             </div>
             <p
-              className="text-xs text-white/70 sm:text-sm md:text-base"
+              className="text-[11px] text-white/70 sm:text-sm md:text-base"
               data-testid="text-subheadline"
             >
               Vive la experiencia del Mundial con Milenium.
             </p>
           </div>
 
-          <Card className="w-full max-w-sm border-green-700/30 bg-green-950/75 backdrop-blur-md sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
+          {/* Card — scrolls internally if step content overflows */}
+          <Card className="w-full max-w-sm shrink-0 border-green-700/30 bg-green-950/75 backdrop-blur-md sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
             {renderStepContent()}
           </Card>
         </main>
 
-        <footer className="py-2 text-center sm:py-4">
-          <p className="flex items-center justify-center gap-1 text-[10px] text-white/40 sm:gap-2 sm:text-xs">
-            <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+        {/* Footer — minimal height */}
+        <footer className="shrink-0 py-1 text-center sm:py-3">
+          <p className="flex items-center justify-center gap-1 text-[9px] text-white/40 sm:gap-2 sm:text-[10px]">
+            <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
             Potenciado por Tecnología de COHETE BRANDS
-            <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+            <Sparkles className="h-2 w-2 sm:h-2.5 sm:w-2.5" />
           </p>
           <button
             onClick={() => navigate("/tus-imagenes")}
-            className="mt-1 text-[10px] text-white/15 transition-colors hover:text-white/35 sm:mt-2 sm:text-xs"
+            className="mt-0.5 text-[9px] text-white/15 transition-colors hover:text-white/35 sm:mt-1 sm:text-[10px]"
             data-testid="link-admin"
           >
             Admin
