@@ -268,10 +268,6 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
       streamRef.current = mediaStream;
       setHasPermission(true);
       setError(null);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
     } catch (err: any) {
       console.error("Camera error:", err);
       setHasPermission(false);
@@ -289,6 +285,14 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
     startCamera();
     return () => stopCamera();
   }, [startCamera, stopCamera]);
+
+  // Assign stream to video element after it mounts (hasPermission → true triggers render of <video>)
+  useEffect(() => {
+    if (hasPermission === true && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.play().catch(() => {});
+    }
+  }, [hasPermission]);
 
   const switchCamera = () => {
     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
