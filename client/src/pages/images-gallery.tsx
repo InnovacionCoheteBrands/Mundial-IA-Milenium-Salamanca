@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, Image as ImageIcon, Home, Sparkles } from "lucide-react";
+import { Download, Image as ImageIcon, Home, Sparkles, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { type Transformation, teamInfo, type TeamId } from "@shared/schema";
 import worldcupBg from "@assets/generated_images/worldcup_background.png";
@@ -37,11 +37,23 @@ export default function ImagesGallery() {
       <div className="relative z-10 flex h-full flex-col">
         {/* Header */}
         <header className="flex shrink-0 items-center justify-between gap-2 px-3 py-1.5 sm:px-4 sm:py-3 md:px-8 md:py-5">
-          <img
-            src={trophyImage}
-            alt="Copa Mundial"
-            className="h-8 w-auto object-contain drop-shadow-lg sm:h-12"
-          />
+          <div className="flex items-center gap-2">
+            <img
+              src={trophyImage}
+              alt="Copa Mundial"
+              className="h-8 w-auto object-contain drop-shadow-lg sm:h-12"
+            />
+            <Link href="/">
+              <Button
+                size="sm"
+                className="gap-1.5 bg-red-600 font-semibold text-white hover:bg-red-700"
+                data-testid="button-home"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Inicio
+              </Button>
+            </Link>
+          </div>
           <img
             src={mileniumLogo}
             alt="Milenium"
