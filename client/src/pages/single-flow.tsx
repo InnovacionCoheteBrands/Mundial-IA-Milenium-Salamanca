@@ -894,7 +894,8 @@ export default function SingleFlowPage() {
           <img
             src={salamancaLogo}
             alt="Salamanca Residencial"
-            className="h-7 w-auto object-contain drop-shadow-md sm:h-9 md:h-12"
+            className="h-7 w-auto object-contain sm:h-9 md:h-12"
+            style={{ filter: "brightness(0) invert(1)" }}
             data-testid="img-salamanca-logo"
           />
           <div className="text-right">
