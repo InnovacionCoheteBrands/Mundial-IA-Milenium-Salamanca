@@ -754,12 +754,12 @@ function ResultContent({
             </div>
           </div>
           <div className="flex flex-col items-center gap-2 rounded-xl border border-green-700/40 bg-green-950/60 p-3 backdrop-blur-sm sm:w-auto">
-            <div className="rounded-lg overflow-hidden" data-testid="img-qr-gallery">
+            <div className="rounded-lg overflow-hidden p-2 bg-white" data-testid="img-qr-gallery">
               <QRCodeSVG
                 value={GALLERY_URL}
-                size={88}
-                bgColor="#052e16"
-                fgColor="#4ade80"
+                size={120}
+                bgColor="#ffffff"
+                fgColor="#000000"
                 level="M"
               />
             </div>
