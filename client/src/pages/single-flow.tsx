@@ -16,7 +16,6 @@ import {
   Loader2,
   Sparkles,
   Trophy,
-  Gift,
   ImagePlus,
 } from "lucide-react";
 import { useApp } from "@/lib/app-context";
@@ -115,10 +114,6 @@ function IntroContent({ onContinue }: { onContinue: () => void }) {
           te convertiremos en leyenda del Mundial.
         </p>
       </div>
-
-      <PromoBadge>
-        <span>⚽</span> Visita y Gana <span>⚽</span>
-      </PromoBadge>
 
       <div className="flex w-full max-w-xs flex-col gap-2">
         <Button
@@ -378,9 +373,6 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
             {isMobile ? "Toma o sube una foto para transformarla" : "Captura o sube una foto"}
           </p>
         </div>
-        <RedBadge>
-          <Gift className="h-3 w-3" /> Visita y Gana
-        </RedBadge>
       </div>
 
       <div
@@ -675,16 +667,6 @@ function ResultContent({
   return (
     <div className="flex flex-col gap-3 p-3 sm:gap-4 sm:p-4 md:p-6">
       <div className="text-center space-y-2">
-        {!hasError && (
-          <div className="flex items-center justify-center gap-2 flex-wrap">
-            <GoldBadge>
-              <Trophy className="h-3 w-3" /> Sorteo Mensual
-            </GoldBadge>
-            <RedBadge>
-              <Sparkles className="h-3 w-3" /> Ruleta de Premios
-            </RedBadge>
-          </div>
-        )}
         <h2
           className="text-lg font-black uppercase tracking-tight text-white sm:text-xl md:text-2xl"
           data-testid="text-result-title"
@@ -924,13 +906,6 @@ export default function SingleFlowPage() {
                 MUNDIAL
               </span>
             </h1>
-            <div className="mx-auto my-1.5 flex items-center justify-center gap-2 sm:my-2">
-              <div className="h-px w-8 bg-gradient-to-r from-transparent to-green-500 sm:w-12" />
-              <PromoBadge>
-                ⚽ Bonos Futboleros ⚽
-              </PromoBadge>
-              <div className="h-px w-8 bg-gradient-to-l from-transparent to-green-500 sm:w-12" />
-            </div>
             <p
               className="text-[11px] text-white/70 sm:text-sm md:text-base"
               data-testid="text-subheadline"
