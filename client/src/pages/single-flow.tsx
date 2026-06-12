@@ -353,7 +353,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const showError = hasPermission === false && !capturedPreview;
 
   return (
-    <div className="flex flex-col gap-3 p-3 sm:gap-4 sm:p-4 md:p-6">
+    <div className="flex h-full flex-col gap-2 p-3 sm:gap-3 sm:p-4 md:p-6">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -364,7 +364,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
         data-testid="input-file-upload"
       />
 
-      <div className="flex items-center justify-between">
+      <div className="shrink-0 flex items-center justify-between">
         <div>
           <h2 className="text-base font-black uppercase tracking-tight text-white sm:text-lg md:text-xl">
             Captura Tu Foto
@@ -376,7 +376,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
       </div>
 
       <div
-        className={`relative w-full overflow-hidden rounded-lg sm:rounded-xl ${isMobile ? "aspect-[3/4]" : "aspect-video"}`}
+        className="relative min-h-0 flex-1 w-full overflow-hidden rounded-lg sm:rounded-xl"
         style={{
           borderColor: teamColors?.primary || "#dc2626",
           borderWidth: "3px",
@@ -430,7 +430,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
 
       <canvas ref={canvasRef} className="hidden" />
 
-      <div className="flex flex-col gap-2 sm:gap-3">
+      <div className="shrink-0 flex flex-col gap-2 sm:gap-3">
         {capturedPreview ? (
           <div className="flex gap-2 sm:gap-3">
             <Button
@@ -892,30 +892,32 @@ export default function SingleFlowPage() {
 
         {/* Main — takes all remaining height, scrollable on very small screens */}
         <main className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-2 pb-1 pt-0 sm:px-4 sm:pb-2">
-          {/* Title block — tighter on mobile */}
-          <div className="mb-2 shrink-0 text-center sm:mb-4 md:mb-6">
-            <p className="mb-0.5 text-[10px] italic font-medium text-green-300/80 sm:text-xs md:text-sm">
-              El próximo gol es tuyo —
-            </p>
-            <h1
-              className="text-xl font-black uppercase tracking-tight text-white drop-shadow-2xl sm:text-3xl md:text-5xl lg:text-6xl"
-              data-testid="text-headline"
-            >
-              LEYENDA DEL{" "}
-              <span className="text-red-500 drop-shadow-[0_2px_8px_rgba(220,38,38,0.6)]">
-                MUNDIAL
-              </span>
-            </h1>
-            <p
-              className="text-[11px] text-white/70 sm:text-sm md:text-base"
-              data-testid="text-subheadline"
-            >
-              Vive la experiencia del Mundial con Milenium.
-            </p>
-          </div>
+          {/* Title block — hidden on capture step to give camera full room */}
+          {currentStep !== "capture" && (
+            <div className="mb-2 shrink-0 text-center sm:mb-4 md:mb-6">
+              <p className="mb-0.5 text-[10px] italic font-medium text-green-300/80 sm:text-xs md:text-sm">
+                El próximo gol es tuyo —
+              </p>
+              <h1
+                className="text-xl font-black uppercase tracking-tight text-white drop-shadow-2xl sm:text-3xl md:text-5xl lg:text-6xl"
+                data-testid="text-headline"
+              >
+                LEYENDA DEL{" "}
+                <span className="text-red-500 drop-shadow-[0_2px_8px_rgba(220,38,38,0.6)]">
+                  MUNDIAL
+                </span>
+              </h1>
+              <p
+                className="text-[11px] text-white/70 sm:text-sm md:text-base"
+                data-testid="text-subheadline"
+              >
+                Vive la experiencia del Mundial con Milenium.
+              </p>
+            </div>
+          )}
 
-          {/* Card — scrolls internally if step content overflows */}
-          <Card className="w-full max-w-sm shrink-0 border-green-700/30 bg-green-950/75 backdrop-blur-md sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
+          {/* Card — flex-1 on capture so camera fills available height */}
+          <Card className={`w-full max-w-sm border-green-700/30 bg-green-950/75 backdrop-blur-md sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl ${currentStep === "capture" ? "flex-1 min-h-0 overflow-hidden flex flex-col" : "shrink-0"}`}>
             {renderStepContent()}
           </Card>
         </main>
