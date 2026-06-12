@@ -353,7 +353,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const showError = hasPermission === false && !capturedPreview;
 
   return (
-    <div className="flex h-full flex-col gap-2 p-3 sm:gap-3 sm:p-4 md:p-6">
+    <div className="flex flex-1 min-h-0 flex-col gap-2 p-3 sm:gap-3 sm:p-4 md:p-6">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
