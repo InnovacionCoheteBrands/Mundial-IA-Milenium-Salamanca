@@ -76,7 +76,26 @@ function getAIClient() {
 function getTransformationPrompt(team: TeamId): string {
   const teamData = teamInfo[team];
   
-  return `Transform this photo into a World Cup celebration scene. The photo may contain 1, 2, 3, 4, 5 or more people - ALL must be preserved and transformed.
+  return `You are a professional photo retoucher. Edit this real photograph to create a World Cup celebration scene. The result MUST look like a genuine photograph taken by a press photographer — NOT a digital painting, illustration, or CGI render.
+
+=== RENDERING STYLE — NON-NEGOTIABLE ===
+REQUIRED:
+- 100% photorealistic output — indistinguishable from a real DSLR photo
+- Photojournalism quality: sharp, natural lighting, authentic skin texture, real fabric wrinkles
+- Cinematic depth of field, realistic stadium lighting (floodlights, lens flare)
+- Natural shadows and highlights consistent with real-world physics
+- Film-like grain and sharpness — looks like it was shot with a Canon EOS R5 or Sony A1
+
+STRICTLY FORBIDDEN (these make it look fake or cartoon):
+- NO cartoon, comic, anime, or illustration style — ever
+- NO cel shading, flat colors, or painterly brush strokes
+- NO 3D CGI rendering or Pixar/game-engine look
+- NO digital art, concept art, or fantasy illustration aesthetics
+- NO over-saturated "hyper-stylized" post-processing
+- NO artificial smoothing of skin (keep real pores, stubble, imperfections)
+- If the output looks like an illustration or video game character, REJECT and redo
+
+The photo may contain 1, 2, 3, 4, 5 or more people - ALL must be preserved and transformed.
 
 === ABSOLUTE PROHIBITIONS - NEVER DO ANY OF THESE ===
 PEOPLE:
