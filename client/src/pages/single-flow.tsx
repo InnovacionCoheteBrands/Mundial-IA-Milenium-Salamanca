@@ -27,6 +27,7 @@ import { QRCodeSVG } from "qrcode.react";
 import trophyImage from "@assets/ChatGPT_Image_6_ene_2026,_15_32_44_1767829210783.png";
 import worldcupBg from "@assets/generated_images/worldcup_background.png";
 import mileniumLogo from "@assets/logo_milenium__1767829210784.png";
+import salamancaLogo from "@assets/image_1781286515533.png";
 
 const GALLERY_URL = `${window.location.origin}/images`;
 
@@ -889,6 +890,12 @@ export default function SingleFlowPage() {
             alt="Copa Mundial"
             className="h-8 w-auto object-contain drop-shadow-lg sm:h-12 md:h-18"
             data-testid="img-trophy"
+          />
+          <img
+            src={salamancaLogo}
+            alt="Salamanca Residencial"
+            className="h-7 w-auto object-contain drop-shadow-md sm:h-9 md:h-12"
+            data-testid="img-salamanca-logo"
           />
           <div className="text-right">
             <img
