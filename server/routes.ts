@@ -76,81 +76,44 @@ function getAIClient() {
 function getTransformationPrompt(team: TeamId): string {
   const teamData = teamInfo[team];
   
-  return `You are a professional photo retoucher. Edit this real photograph to create a World Cup celebration scene. The result MUST look like a genuine photograph taken by a press photographer — NOT a digital painting, illustration, or CGI render.
+  return `You are a professional photo editor. I uploaded a real photo. You must edit it like Photoshop — changing only the clothes, background, and adding a trophy. Do NOT redraw, regenerate, or "improve" the people in the photo.
 
-=== RENDERING STYLE — NON-NEGOTIABLE ===
-REQUIRED:
-- 100% photorealistic output — indistinguishable from a real DSLR photo
-- Photojournalism quality: sharp, natural lighting, authentic skin texture, real fabric wrinkles
-- Cinematic depth of field, realistic stadium lighting (floodlights, lens flare)
-- Natural shadows and highlights consistent with real-world physics
-- Film-like grain and sharpness — looks like it was shot with a Canon EOS R5 or Sony A1
+=== THE ONLY RULE THAT MATTERS ===
+Use the faces from the uploaded photo exactly as they are. Do NOT change the shape, size, features, expression, or skin tone of any face. Do NOT "make them look better" or "more photogenic." Keep the faces IDENTICAL to the original.
 
-STRICTLY FORBIDDEN (these make it look fake or cartoon):
-- NO cartoon, comic, anime, or illustration style — ever
-- NO cel shading, flat colors, or painterly brush strokes
-- NO 3D CGI rendering or Pixar/game-engine look
-- NO digital art, concept art, or fantasy illustration aesthetics
-- NO over-saturated "hyper-stylized" post-processing
-- NO artificial smoothing of skin (keep real pores, stubble, imperfections)
-- If the output looks like an illustration or video game character, REJECT and redo
+=== PEOPLE — PRESERVE COMPLETELY ===
+- The photo has 1, 2, 3, 4, 5 or more people. Keep ALL of them.
+- Do NOT remove, add, or change the count of people.
+- Do NOT change body type, weight, height, or proportions.
+- Do NOT change the pose, posture, or relative positions.
+- Do NOT change hair, glasses, jewelry, or accessories.
+- Do NOT smooth skin, remove wrinkles, or add makeup.
+- Do NOT change eye color, nose shape, jawline, or smile.
 
-The photo may contain 1, 2, 3, 4, 5 or more people - ALL must be preserved and transformed.
+=== FACES — EXACT COPY ===
+- Use the faces from the original photo EXACTLY.
+- Do NOT redraw, regenerate, or synthesize any face.
+- Do NOT "enhance" or "beautify" the faces.
+- Do NOT change facial expressions.
+- The faces in the output must be instantly recognizable as the same people.
 
-=== ABSOLUTE PROHIBITIONS - NEVER DO ANY OF THESE ===
-PEOPLE:
-- NEVER remove, delete, hide, or crop out ANY person
-- NEVER add new people that weren't in the original
-- NEVER reduce the count of people in the image
-
-FACES (CRITICAL - DO NOT MODIFY):
-- NEVER change, replace, alter, or regenerate ANY face
-- NEVER modify facial features, bone structure, jaw, nose, eyes, mouth
-- NEVER change skin tone, skin texture, or complexion
-- NEVER change eye color or eye shape
-- NEVER remove or add facial hair (beard, mustache, stubble)
-- NEVER generate synthetic or AI faces - use ONLY the original faces
-- NEVER swap faces between people
-
-BODIES (CRITICAL - DO NOT MODIFY):
-- NEVER change body type, body shape, or body size
-- NEVER change height proportions between people
-- NEVER change weight or build (thin, average, heavy)
-- NEVER change shoulder width or body frame
-- NEVER alter arms, hands, or body posture significantly
-
-=== WHAT TO PRESERVE FOR EACH PERSON ===
-For EVERY person (whether 1 person or 5+ people), keep EXACTLY:
-- Their EXACT face pixel-for-pixel from the input photo
-- Their exact body type, size, and proportions
-- Their exact skin tone and complexion
-- Their exact hairstyle, hair color, hair length
-- Their exact pose and body position
-- Their glasses, jewelry, or accessories if visible
-- Their relative positions to each other
-
-=== ONLY THESE CHANGES ARE ALLOWED ===
+=== WHAT TO CHANGE ===
 1. CLOTHING ONLY:
    - Replace ONLY the clothing with ${teamData.name} national team jersey
-   - Every single person gets the jersey - NO EXCEPTIONS
-   - Jersey must fit naturally on each person's actual body
+   - Every single person gets the jersey
+   - Jersey must fit naturally on each person's body
 
-2. ONE TROPHY:
-   - Add FIFA World Cup Trophy held by ONE person
-   - Other people celebrate around naturally
+2. TROPHY:
+   - Add ONE FIFA World Cup Trophy held by ONE person
 
 3. BACKGROUND ONLY:
-   - Replace background with World Cup stadium
-   - Stadium, green pitch, lights, confetti
+   - Replace the background with a World Cup stadium
+   - Add green pitch, stadium lights, confetti
 
-=== VERIFICATION CHECKLIST ===
-Count people in input → Output must have SAME count
-Each face → Must be IDENTICAL to input (not similar - IDENTICAL)
-Each body → Same type/size as input
-Each person → Wearing ${teamData.name} jersey
-Original clothing → None visible
-
-PRIORITY: If anything conflicts, preserve faces and bodies EXACTLY as they appear in the input photo.`;
+=== QUALITY ===
+- The final image should look like a professional celebration photo
+- Natural lighting, clear image, no cartoon or illustration style
+- But do NOT sacrifice face accuracy for "photorealism"`;
 }
 
 async function transformImage(originalImageBase64: string, team: TeamId): Promise<string> {
