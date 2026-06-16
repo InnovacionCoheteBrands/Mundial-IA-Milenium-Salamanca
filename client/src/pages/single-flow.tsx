@@ -205,6 +205,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
@@ -212,9 +213,15 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [cameraAvailable, setCameraAvailable] = useState(true);
+  const [previewAspectRatio, setPreviewAspectRatio] = useState<number>(isMobile ? 3 / 4 : 4 / 3);
 
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   const teamColors = selectedTeam ? teamInfo[selectedTeam].colors : null;
+
+  const updatePreviewAspectRatio = (width: number, height: number) => {
+    if (width > 0 && height > 0) {
+      setPreviewAspectRatio(width / height);
+    }
+  };
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -298,6 +305,11 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
   };
 
+  const handleVideoMetadata = () => {
+    if (!videoRef.current) return;
+    updatePreviewAspectRatio(videoRef.current.videoWidth, videoRef.current.videoHeight);
+  };
+
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
     const video = videoRef.current;
@@ -307,6 +319,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
+    updatePreviewAspectRatio(video.videoWidth, video.videoHeight);
 
     if (facingMode === "user") {
       ctx.translate(canvas.width, 0);
@@ -324,8 +337,13 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
     reader.onload = (ev) => {
       const result = ev.target?.result as string;
       if (result) {
-        stopCamera();
-        setCapturedPreview(result);
+        const image = new Image();
+        image.onload = () => {
+          updatePreviewAspectRatio(image.naturalWidth, image.naturalHeight);
+          stopCamera();
+          setCapturedPreview(result);
+        };
+        image.src = result;
       }
     };
     reader.readAsDataURL(file);
@@ -379,20 +397,22 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
         </div>
       </div>
 
-      <div
-        className="relative min-h-0 flex-1 w-full overflow-hidden rounded-lg bg-black sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl"
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <div
+          className="relative w-full max-h-full overflow-hidden rounded-lg bg-black sm:mx-auto sm:max-w-2xl sm:rounded-xl"
         style={{
           borderColor: teamColors?.primary || "#dc2626",
           borderWidth: "3px",
           borderStyle: "solid",
+          aspectRatio: previewAspectRatio,
         }}
         data-testid="card-camera-preview"
-      >
+        >
         {capturedPreview ? (
           <img
             src={capturedPreview}
             alt="Foto capturada"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain bg-black"
             data-testid="img-captured-preview"
           />
         ) : showError ? (
@@ -414,7 +434,8 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
             autoPlay
             playsInline
             muted
-            className={`h-full w-full ${isMobile ? "object-contain bg-black" : "object-contain"} ${facingMode === "user" ? "scale-x-[-1]" : ""}`}
+            onLoadedMetadata={handleVideoMetadata}
+            className={`h-full w-full object-contain ${facingMode === "user" ? "scale-x-[-1]" : ""}`}
             data-testid="video-camera"
           />
         )}
@@ -430,6 +451,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
             <SwitchCamera className="h-4 w-4" />
           </Button>
         )}
+        </div>
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
@@ -694,7 +716,7 @@ function ResultContent({
             <img
               src={capturedImage}
               alt="Foto original"
-              className={`w-full max-w-sm rounded-lg ${isMobile ? "aspect-[3/4] object-contain bg-black" : "aspect-video object-cover"}`}
+              className="w-full max-w-sm rounded-lg object-contain bg-black"
               data-testid="img-original-fallback"
             />
           )}

@@ -298,14 +298,25 @@ You may make a very small, natural pose adjustment ONLY if necessary so ONE pers
    - The trophy must match perspective, scale, lighting, and hand placement.
 
 3. BACKGROUND
-   - Replace the background with a realistic World Cup stadium celebration scene.
-   - Include pitch, stadium lights, crowd energy, subtle confetti, and match-day atmosphere.
-   - Keep the people as the main subject, not the background spectacle.
+   - Replace the background with a realistic World Cup stadium celebration scene from field level or near the edge of the pitch, not a generic flat backdrop.
+   - The environment should feel like a live post-match celebration inside the stadium bowl.
+   - Show real stadium depth: visible grass or sideline area, stands full of people, bright stadium lights, and atmospheric perspective.
+   - Include players or team figures in the background when appropriate, but keep them secondary, believable, and not distracting.
+   - Include confetti mainly in the air and across the stands, not as an overwhelming foreground wall.
+   - Keep the people from the uploaded photo as the main subject, not the background spectacle.
+
+4. COMPOSITION DIRECTION
+   - Aim for a premium sports editorial look, as if this was photographed during a real World Cup celebration.
+   - Prefer a more immersive stadium composition: closer to the pitch, stronger depth, more believable crowd, and more cinematic energy.
+   - Avoid the feeling of a pasted subject over a generic stadium stock image.
+   - Integrate the subject naturally into the environment with coherent scale, lighting, shadows, and color temperature.
 
 === VARIATION WITHOUT LOSING REALISM ===
 For each generation, create a different but plausible celebration photo by varying ONLY these elements:
 - stadium angle or section
-- confetti density
+- field-level position or sideline perspective
+- visible background players or staff
+- confetti density and where it appears in the stands
 - lighting mood
 - crop distance
 - trophy placement angle
@@ -314,12 +325,17 @@ For each generation, create a different but plausible celebration photo by varyi
 
 Choose one realistic combination per generation and avoid repeating the exact same composition when another natural option is possible.
 
+=== SCENE VARIATION RULE ===
+Use a similar celebration theme every time, but do NOT repeat the exact same stadium layout, same crowd pattern, same trophy angle, same confetti placement, or same camera framing in every result.
+Each image should feel like a different real photograph taken in the same kind of event, not the same template reused.
+
 === VISUAL STYLE ===
 - Photorealistic
 - Real camera photo
 - Natural skin texture
 - Realistic lighting and shadows
 - High detail
+- Cohesive stadium atmosphere
 - No cartoon, painting, 3D render, plastic skin, beauty filter, or fantasy look
 
 === HARD FAIL CONDITIONS TO AVOID ===
@@ -331,9 +347,12 @@ Choose one realistic combination per generation and avoid repeating the exact sa
 - over-stylized image
 - fake smile or changed expression
 - dramatic pose change
+- pasted-on look
+- flat or empty background
+- repeated template composition
 
 === FINAL GOAL ===
-Return a realistic, premium, celebratory World Cup photo edit where the people are still clearly the exact same people from the uploaded image, now wearing ${teamData.name} jerseys in a stadium, with one person holding the World Cup Trophy naturally. Identity accuracy is more important than visual spectacle.`;
+Return a realistic, premium, celebratory World Cup photo edit where the people are still clearly the exact same people from the uploaded image, now wearing ${teamData.name} jerseys in an immersive stadium celebration scene, with one person holding the World Cup Trophy naturally. The result should feel more dynamic, more integrated, and more editorial, while identity accuracy remains more important than spectacle.`;
 }
 
 export async function registerRoutes(
