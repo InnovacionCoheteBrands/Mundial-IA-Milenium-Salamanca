@@ -205,6 +205,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const countdownTimeoutsRef = useRef<number[]>([]);
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -213,6 +214,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [cameraAvailable, setCameraAvailable] = useState(true);
+  const [captureCountdown, setCaptureCountdown] = useState<number | "ya" | null>(null);
   const [previewAspectRatio, setPreviewAspectRatio] = useState<number>(isMobile ? 3 / 4 : 4 / 3);
 
   const teamColors = selectedTeam ? teamInfo[selectedTeam].colors : null;
@@ -222,6 +224,12 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
       setPreviewAspectRatio(width / height);
     }
   };
+
+  const clearCaptureCountdown = useCallback(() => {
+    countdownTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    countdownTimeoutsRef.current = [];
+    setCaptureCountdown(null);
+  }, []);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -293,6 +301,10 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
     return () => stopCamera();
   }, [startCamera, stopCamera]);
 
+  useEffect(() => {
+    return () => clearCaptureCountdown();
+  }, [clearCaptureCountdown]);
+
   // Assign stream to video element after it mounts (hasPermission → true triggers render of <video>)
   useEffect(() => {
     if (hasPermission === true && videoRef.current && streamRef.current) {
@@ -302,6 +314,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   }, [hasPermission]);
 
   const switchCamera = () => {
+    clearCaptureCountdown();
     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
   };
 
@@ -330,9 +343,25 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
     setCapturedPreview(canvas.toDataURL("image/jpeg", 0.9));
   };
 
+  const startCaptureCountdown = () => {
+    if (captureCountdown !== null || !showCamera) return;
+
+    setCaptureCountdown(3);
+    countdownTimeoutsRef.current = [
+      window.setTimeout(() => setCaptureCountdown(2), 1000),
+      window.setTimeout(() => setCaptureCountdown(1), 2000),
+      window.setTimeout(() => setCaptureCountdown("ya"), 3000),
+      window.setTimeout(() => {
+        capturePhoto();
+        clearCaptureCountdown();
+      }, 3400),
+    ];
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    clearCaptureCountdown();
     const reader = new FileReader();
     reader.onload = (ev) => {
       const result = ev.target?.result as string;
@@ -352,6 +381,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
   };
 
   const retakePhoto = () => {
+    clearCaptureCountdown();
     setCapturedPreview(null);
     if (cameraAvailable && hasPermission !== false) {
       startCamera();
@@ -440,17 +470,26 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
           />
         )}
 
-        {showCamera && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-2 bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
-            onClick={switchCamera}
-            data-testid="button-switch-camera"
-          >
-            <SwitchCamera className="h-4 w-4" />
-          </Button>
-        )}
+          {showCamera && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 bg-black/50 text-white backdrop-blur-sm hover:bg-black/70"
+              onClick={switchCamera}
+              disabled={captureCountdown !== null}
+              data-testid="button-switch-camera"
+            >
+              <SwitchCamera className="h-4 w-4" />
+            </Button>
+          )}
+
+          {showCamera && captureCountdown !== null && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/35 backdrop-blur-[2px]">
+              <div className="rounded-full border border-white/20 bg-black/55 px-6 py-4 text-center text-4xl font-black uppercase tracking-wide text-white shadow-2xl sm:text-6xl">
+                {captureCountdown === "ya" ? "¡Ya!" : captureCountdown}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -496,11 +535,21 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
               <Button
                 size="default"
                 className="w-full gap-2 bg-red-600 font-bold uppercase tracking-wide text-white hover:bg-red-700 sm:text-base"
-                onClick={capturePhoto}
+                onClick={startCaptureCountdown}
+                disabled={captureCountdown !== null}
                 data-testid="button-capture"
               >
-                <Camera className="h-5 w-5" />
-                Capturar Foto
+                {captureCountdown !== null ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Preparando captura...
+                  </>
+                ) : (
+                  <>
+                    <Camera className="h-5 w-5" />
+                    Capturar Foto
+                  </>
+                )}
               </Button>
             )}
             <Button
@@ -508,6 +557,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
               variant="outline"
               className="w-full gap-2 border-green-600/50 bg-white/5 font-semibold text-white hover:bg-white/10 sm:text-base"
               onClick={() => fileInputRef.current?.click()}
+              disabled={captureCountdown !== null}
               data-testid="button-upload"
             >
               <ImagePlus className="h-5 w-5" />
