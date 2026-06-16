@@ -33,6 +33,8 @@ const BRANDING_LAYOUT: BrandingAssetConfig[] = [
   { key: "trophy", maxWidthRatio: 0.14, maxHeightRatio: 0.68 },
 ];
 
+const TARGET_OUTPUT_ASPECT_RATIO = 16 / 9;
+
 async function loadBrandingAsset(
   asset: BrandingAssetConfig,
   imageWidth: number,
@@ -56,6 +58,59 @@ async function loadBrandingAsset(
   };
 }
 
+async function normalizeImageToAspectRatio(
+  imageBase64: string,
+  targetAspectRatio: number,
+): Promise<string> {
+  const mimeMatch = imageBase64.match(/^data:(image\/[\w.+-]+);base64,/);
+  const mimeType = mimeMatch?.[1] || "image/jpeg";
+  const base64Data = imageBase64.replace(/^data:image\/[\w.+-]+;base64,/, "");
+  const imageBuffer = Buffer.from(base64Data, "base64");
+  const image = sharp(imageBuffer);
+  const metadata = await image.metadata();
+
+  if (!metadata.width || !metadata.height) {
+    return imageBase64;
+  }
+
+  const imageWidth = metadata.width;
+  const imageHeight = metadata.height;
+  const currentAspectRatio = imageWidth / imageHeight;
+  const ratioDelta = Math.abs(currentAspectRatio - targetAspectRatio);
+
+  if (ratioDelta < 0.02) {
+    return imageBase64;
+  }
+
+  let canvasWidth = imageWidth;
+  let canvasHeight = imageHeight;
+
+  if (currentAspectRatio < targetAspectRatio) {
+    canvasWidth = Math.max(imageWidth, Math.round(imageHeight * targetAspectRatio));
+  } else {
+    canvasHeight = Math.max(imageHeight, Math.round(imageWidth / targetAspectRatio));
+  }
+
+  const blurredBackground = await sharp(imageBuffer)
+    .resize(canvasWidth, canvasHeight, { fit: "cover" })
+    .blur(18)
+    .modulate({ brightness: 0.82, saturation: 0.95 })
+    .jpeg({ quality: 90 })
+    .toBuffer();
+
+  const foreground = await sharp(imageBuffer)
+    .resize(canvasWidth, canvasHeight, { fit: "contain", withoutEnlargement: true })
+    .jpeg({ quality: 92 })
+    .toBuffer();
+
+  const normalizedBuffer = await sharp(blurredBackground)
+    .composite([{ input: foreground, gravity: "center" }])
+    .jpeg({ quality: 92 })
+    .toBuffer();
+
+  return `data:${mimeType};base64,${normalizedBuffer.toString("base64")}`;
+}
+
 async function addBrandingToImage(imageBase64: string): Promise<string> {
   try {
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
@@ -71,9 +126,9 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
     const imageWidth = metadata.width;
     const imageHeight = metadata.height;
     const paddingX = Math.max(24, Math.round(imageWidth * 0.035));
-    const paddingY = Math.max(18, Math.round(imageHeight * 0.025));
-    const bandHeight = Math.max(110, Math.round(imageHeight * 0.18));
-    const bandTop = imageHeight;
+    const paddingY = Math.max(16, Math.round(imageHeight * 0.02));
+    const bandHeight = Math.max(72, Math.round(imageHeight * 0.14));
+    const bandTop = Math.max(paddingY, imageHeight - bandHeight - paddingY);
     const contentHeight = Math.max(1, bandHeight - paddingY * 2);
 
     const assets = await Promise.all(
@@ -124,11 +179,11 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
     const overlays: OverlayOptions[] = [
       {
         input: Buffer.from(
-          `<svg width="${imageWidth}" height="${bandHeight}" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100%" height="100%" fill="#08150f"/>
+          `<svg width="${availableWidth}" height="${bandHeight}" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100%" height="100%" rx="${Math.round(bandHeight * 0.18)}" fill="rgba(8,21,15,0.82)"/>
           </svg>`,
         ),
-        left: 0,
+        left: paddingX,
         top: bandTop,
       },
     ];
@@ -144,10 +199,6 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
     }
 
     const brandedBuffer = await mainImage
-      .extend({
-        bottom: bandHeight,
-        background: { r: 8, g: 21, b: 15, alpha: 1 },
-      })
       .composite(overlays)
       .jpeg({ quality: 92 })
       .toBuffer();
@@ -221,7 +272,8 @@ Use the faces from the uploaded photo exactly as they are. Do NOT change the sha
 
 async function transformImage(originalImageBase64: string, team: TeamId): Promise<string> {
   const ai = getAIClient();
-  const base64Data = originalImageBase64.replace(/^data:image\/\w+;base64,/, "");
+  const normalizedInputImage = await normalizeImageToAspectRatio(originalImageBase64, TARGET_OUTPUT_ASPECT_RATIO);
+  const base64Data = normalizedInputImage.replace(/^data:image\/\w+;base64,/, "");
   const prompt = getTransformationPromptV2(team);
   
   const response = await ai.models.generateContent({
@@ -257,7 +309,7 @@ async function transformImage(originalImageBase64: string, team: TeamId): Promis
   }
 
   const mimeType = imagePart.inlineData.mimeType || "image/png";
-  return `data:${mimeType};base64,${imagePart.inlineData.data}`;
+  return normalizeImageToAspectRatio(`data:${mimeType};base64,${imagePart.inlineData.data}`, TARGET_OUTPUT_ASPECT_RATIO);
 }
 
 function getTransformationPromptV2(team: TeamId): string {
@@ -269,6 +321,7 @@ function getTransformationPromptV2(team: TeamId): string {
 The people in the uploaded photo must remain unmistakably the same real people.
 - Preserve each face exactly: facial structure, eyes, nose, mouth, jawline, cheeks, eyebrows, ears, skin tone, age, expression, and likeness.
 - Preserve hairstyle, hairline, glasses, jewelry, beard, makeup, and visible personal traits.
+- Preserve tattoos, moles, scars, piercings, bracelets, watches, fingernails, and all visible identifying marks.
 - Do NOT beautify, stylize, redraw, re-age, de-age, slim, enlarge, or improve the people.
 - Do NOT replace any face, invent any face, blend faces, or make anyone look like a different person.
 - The faces must stay instantly recognizable to someone who knows the original people.
@@ -277,6 +330,7 @@ The people in the uploaded photo must remain unmistakably the same real people.
 - Keep ALL people from the original image.
 - Do NOT add or remove people.
 - Preserve body type, body proportions, height, hands, arms, legs, and overall anatomy.
+- Preserve exact limb proportions, shoulder width, arm size, hand size, finger count, tattoos on arms or hands, and visible body details.
 - Preserve the original camera perspective and subject scale as much as possible.
 - Do NOT turn this into a different body, different person, or different anatomy.
 
@@ -324,6 +378,12 @@ You may make a very small, natural pose adjustment ONLY if necessary so ONE pers
    - The stadium should feel alive, triumphant, and high-stakes, as if the team has just won an important match.
    - Keep this energy behind the main subject so the person remains the hero of the shot.
 
+7. OUTPUT FRAMING
+   - The final composition must be horizontal landscape, like a television broadcast frame.
+   - Prefer a wide 16:9 style composition.
+   - Do NOT return a portrait or vertical composition.
+   - Keep all people fully and naturally framed inside this horizontal composition.
+
 === VARIATION WITHOUT LOSING REALISM ===
 For each generation, create a different but plausible celebration photo by varying ONLY these elements:
 - stadium angle or section
@@ -369,6 +429,9 @@ Each image should feel like a different real photograph taken in the same kind o
 - repeated template composition
 - over-blurred fake portrait look
 - unrealistic poster-style compositing
+- altered tattoos or missing identifying marks
+- portrait output
+- cropped-out people or distorted limbs
 
 === FINAL GOAL ===
 Return a realistic, premium, high-impact World Cup victory photo edit where the people are still clearly the exact same people from the uploaded image, now wearing ${teamData.name} jerseys in an immersive stadium celebration scene, with one person holding the World Cup Trophy naturally. The image should feel like an impressive televised sports moment: real, polished, energetic, and wow, while identity accuracy remains more important than spectacle.`;
