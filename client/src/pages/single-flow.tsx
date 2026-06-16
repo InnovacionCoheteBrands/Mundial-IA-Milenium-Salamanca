@@ -380,7 +380,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
       </div>
 
       <div
-        className="relative min-h-0 flex-1 w-full overflow-hidden rounded-lg sm:rounded-xl"
+        className="relative min-h-0 flex-1 w-full overflow-hidden rounded-lg bg-black sm:mx-auto sm:w-full sm:max-w-2xl sm:rounded-xl"
         style={{
           borderColor: teamColors?.primary || "#dc2626",
           borderWidth: "3px",
@@ -414,7 +414,7 @@ function CaptureContent({ onContinue }: { onContinue: () => void }) {
             autoPlay
             playsInline
             muted
-            className={`h-full w-full ${isMobile ? "object-contain bg-black" : "object-cover"} ${facingMode === "user" ? "scale-x-[-1]" : ""}`}
+            className={`h-full w-full ${isMobile ? "object-contain bg-black" : "object-contain"} ${facingMode === "user" ? "scale-x-[-1]" : ""}`}
             data-testid="video-camera"
           />
         )}
