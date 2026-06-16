@@ -306,10 +306,23 @@ You may make a very small, natural pose adjustment ONLY if necessary so ONE pers
    - Keep the people from the uploaded photo as the main subject, not the background spectacle.
 
 4. COMPOSITION DIRECTION
-   - Aim for a premium sports editorial look, as if this was photographed during a real World Cup celebration.
-   - Prefer a more immersive stadium composition: closer to the pitch, stronger depth, more believable crowd, and more cinematic energy.
+   - Aim for a premium sports broadcast look, as if this was captured by a high-end television camera during a World Cup victory celebration.
+   - Prefer a more immersive stadium composition: closer to the pitch, stronger depth, more believable crowd, and more wow-factor energy.
    - Avoid the feeling of a pasted subject over a generic stadium stock image.
    - Integrate the subject naturally into the environment with coherent scale, lighting, shadows, and color temperature.
+
+5. BROADCAST CAMERA LOOK
+   - The image should feel like a top-tier live TV sports shot: sharp subject, premium lens rendering, believable stadium lighting, and rich contrast.
+   - Keep the main person crisp and clearly readable.
+   - Allow the background to be slightly softer or subtly out of focus, like a professional telephoto or broadcast camera separation.
+   - Use realistic depth, natural highlight rolloff, and a polished televised finish, not artificial filters.
+   - The final image should feel impressive, celebratory, and visually striking without looking fake or overprocessed.
+
+6. CELEBRATION ENERGY
+   - Show visible victory atmosphere: confetti bursts, crowd excitement, and players or team figures celebrating in the background when appropriate.
+   - Confetti should feel dynamic and event-driven, like celebration cannons or bursts in the stadium, not random floating debris everywhere.
+   - The stadium should feel alive, triumphant, and high-stakes, as if the team has just won an important match.
+   - Keep this energy behind the main subject so the person remains the hero of the shot.
 
 === VARIATION WITHOUT LOSING REALISM ===
 For each generation, create a different but plausible celebration photo by varying ONLY these elements:
@@ -318,6 +331,8 @@ For each generation, create a different but plausible celebration photo by varyi
 - visible background players or staff
 - confetti density and where it appears in the stands
 - lighting mood
+- amount of background blur
+- lens feel or broadcast framing feel
 - crop distance
 - trophy placement angle
 - jersey wrinkles and fabric behavior
@@ -336,6 +351,8 @@ Each image should feel like a different real photograph taken in the same kind o
 - Realistic lighting and shadows
 - High detail
 - Cohesive stadium atmosphere
+- Premium live-broadcast sports look
+- Slight background separation when natural
 - No cartoon, painting, 3D render, plastic skin, beauty filter, or fantasy look
 
 === HARD FAIL CONDITIONS TO AVOID ===
@@ -350,9 +367,11 @@ Each image should feel like a different real photograph taken in the same kind o
 - pasted-on look
 - flat or empty background
 - repeated template composition
+- over-blurred fake portrait look
+- unrealistic poster-style compositing
 
 === FINAL GOAL ===
-Return a realistic, premium, celebratory World Cup photo edit where the people are still clearly the exact same people from the uploaded image, now wearing ${teamData.name} jerseys in an immersive stadium celebration scene, with one person holding the World Cup Trophy naturally. The result should feel more dynamic, more integrated, and more editorial, while identity accuracy remains more important than spectacle.`;
+Return a realistic, premium, high-impact World Cup victory photo edit where the people are still clearly the exact same people from the uploaded image, now wearing ${teamData.name} jerseys in an immersive stadium celebration scene, with one person holding the World Cup Trophy naturally. The image should feel like an impressive televised sports moment: real, polished, energetic, and wow, while identity accuracy remains more important than spectacle.`;
 }
 
 export async function registerRoutes(
