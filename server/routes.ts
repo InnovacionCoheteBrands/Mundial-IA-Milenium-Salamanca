@@ -28,9 +28,9 @@ type BrandingAssetPlacement = {
 };
 
 const BRANDING_LAYOUT: BrandingAssetConfig[] = [
-  { key: "milenium", maxWidthRatio: 0.3, maxHeightRatio: 0.54 },
-  { key: "salamanca", maxWidthRatio: 0.26, maxHeightRatio: 0.5 },
-  { key: "trophy", maxWidthRatio: 0.15, maxHeightRatio: 0.72 },
+  { key: "trophy", maxWidthRatio: 0.08, maxHeightRatio: 0.62 },
+  { key: "salamanca", maxWidthRatio: 0.22, maxHeightRatio: 0.34 },
+  { key: "milenium", maxWidthRatio: 0.12, maxHeightRatio: 0.5 },
 ];
 
 const TARGET_OUTPUT_ASPECT_RATIO = 16 / 9;
@@ -102,6 +102,16 @@ async function createBrandingShadowBuffer(assetBuffer: Buffer, width: number, he
     .blur(5)
     .png()
     .toBuffer();
+}
+
+function createBrandingSeparator(height: number): Buffer {
+  const separatorWidth = 2;
+
+  return Buffer.from(
+    `<svg width="${separatorWidth}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="0" width="1" height="${height}" fill="rgba(255,255,255,0.42)"/>
+    </svg>`,
+  );
 }
 
 async function normalizeImageToAspectRatio(
@@ -185,11 +195,13 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
     }
 
     const availableWidth = Math.max(1, imageWidth - paddingX * 2);
-    const baseGap = Math.max(18, Math.round(imageWidth * 0.018));
+    const baseGap = Math.max(18, Math.round(imageWidth * 0.016));
+    const separatorGap = Math.max(10, Math.round(imageWidth * 0.01));
     const totalAssetsWidth = assets.reduce((sum, asset) => sum + asset.width, 0);
     const totalGapWidth = baseGap * (assets.length - 1);
-    const maxClusterWidth = Math.min(availableWidth, Math.round(imageWidth * 0.52));
-    const scaleFactor = Math.min(1, maxClusterWidth / (totalAssetsWidth + totalGapWidth));
+    const totalSeparatorWidth = (assets.length - 1) * (separatorGap * 2 + 2);
+    const maxClusterWidth = Math.min(availableWidth, Math.round(imageWidth * 0.34));
+    const scaleFactor = Math.min(1, maxClusterWidth / (totalAssetsWidth + totalGapWidth + totalSeparatorWidth));
 
     const scaledAssets = await Promise.all(
       assets.map(async (asset) => {
@@ -215,12 +227,14 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
 
     const finalGapWidth = baseGap;
     const clusterHeight = scaledAssets.reduce((maxHeight, asset) => Math.max(maxHeight, asset.height), 0);
-    const clusterTop = Math.max(paddingY, imageHeight - clusterHeight - paddingY);
+    const separatorHeight = Math.max(20, Math.round(clusterHeight * 0.72));
+    const separatorBuffer = createBrandingSeparator(separatorHeight);
+    const clusterTop = Math.max(paddingY, imageHeight - clusterHeight - Math.max(paddingY, Math.round(imageHeight * 0.028)));
     const shadowOffset = Math.max(3, Math.round(imageWidth * 0.004));
     let currentX = paddingX;
     const overlays: OverlayOptions[] = [];
 
-    for (const asset of scaledAssets) {
+    for (const [index, asset] of scaledAssets.entries()) {
       const top = clusterTop + Math.max(0, Math.round((clusterHeight - asset.height) / 2));
       const shadowBuffer = await createBrandingShadowBuffer(asset.buffer, asset.width, asset.height);
 
@@ -235,6 +249,17 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
         top,
       });
       currentX += asset.width + finalGapWidth;
+
+      if (index < scaledAssets.length - 1) {
+        const separatorTop = clusterTop + Math.max(0, Math.round((clusterHeight - separatorHeight) / 2));
+        const separatorLeft = currentX + separatorGap;
+        overlays.push({
+          input: separatorBuffer,
+          left: separatorLeft,
+          top: separatorTop,
+        });
+        currentX = separatorLeft + 2 + separatorGap;
+      }
     }
 
     const brandedBuffer = await mainImage
