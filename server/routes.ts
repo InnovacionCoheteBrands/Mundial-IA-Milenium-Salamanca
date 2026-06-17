@@ -67,7 +67,7 @@ async function loadBrandingAsset(
 
   const placementPromise = (async () => {
     const assetBuffer = getBrandingSourceBuffer(asset.key);
-    let resizedAsset = sharp(assetBuffer).resize(
+    const resizedAsset = sharp(assetBuffer).resize(
       Math.max(1, Math.round(imageWidth * asset.maxWidthRatio)),
       Math.max(1, Math.round(contentHeight * asset.maxHeightRatio)),
       {
@@ -76,13 +76,13 @@ async function loadBrandingAsset(
       },
     );
 
-    if (asset.key === "salamanca") {
-      resizedAsset = resizedAsset.tint({ r: 255, g: 255, b: 255 });
-    }
-
-    const resizedBuffer = await resizedAsset
+    let resizedBuffer = await resizedAsset
       .png()
       .toBuffer();
+
+    if (asset.key === "salamanca") {
+      resizedBuffer = await createWhiteVisiblePixelsBuffer(resizedBuffer);
+    }
 
     const resizedMetadata = await sharp(resizedBuffer).metadata();
 
@@ -98,6 +98,31 @@ async function loadBrandingAsset(
 
   brandingPlacementCache.set(cacheKey, placementPromise);
   return placementPromise;
+}
+
+async function createWhiteVisiblePixelsBuffer(assetBuffer: Buffer): Promise<Buffer> {
+  const { data, info } = await sharp(assetBuffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  for (let index = 0; index < data.length; index += info.channels) {
+    if (data[index + 3] > 0) {
+      data[index] = 255;
+      data[index + 1] = 255;
+      data[index + 2] = 255;
+    }
+  }
+
+  return sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: info.channels,
+    },
+  })
+    .png()
+    .toBuffer();
 }
 
 async function createBrandingShadowBuffer(assetBuffer: Buffer, width: number, height: number): Promise<Buffer> {
