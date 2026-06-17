@@ -29,7 +29,7 @@ type BrandingAssetPlacement = {
 
 const BRANDING_LAYOUT: BrandingAssetConfig[] = [
   { key: "trophy", maxWidthRatio: 0.08, maxHeightRatio: 0.9 },
-  { key: "salamanca", maxWidthRatio: 0.36, maxHeightRatio: 0.58 },
+  { key: "salamanca", maxWidthRatio: 0.36, maxHeightRatio: 0.92 },
   { key: "milenium", maxWidthRatio: 0.15, maxHeightRatio: 0.94 },
 ];
 
