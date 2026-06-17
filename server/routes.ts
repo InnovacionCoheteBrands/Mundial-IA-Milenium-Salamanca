@@ -402,12 +402,13 @@ async function transformImage(originalImageBase64: string, team: TeamId): Promis
 function getTransformationPromptV2(team: TeamId): string {
   const teamData = teamInfo[team];
 
-  return `You are editing a REAL uploaded photo, not creating a new person. Treat the uploaded image as the single source of truth for identity, anatomy, pose, and subject placement. The final result must look like a realistic sports celebration photograph edited from the original photo.
+  return `You are editing a REAL uploaded photo, not creating a new person. Treat the uploaded image as the single source of truth for identity, anatomy, pose, body build, and subject placement. The final result must look like a realistic sports celebration photograph edited from the original photo.
 
 === CORE RULE ===
 When there is any conflict between identity fidelity and cinematic spectacle, identity fidelity wins every time.
 This is an image edit task, not a face reinterpretation task.
 The person must look like the original person first; the World Cup scene is secondary.
+If preserving the exact person conflicts with any jersey, trophy, stadium, camera, lighting, or composition instruction, ignore the conflicting creative instruction and preserve the person.
 
 === HIGHEST PRIORITY: PRESERVE IDENTITY EXACTLY ===
 The people in the uploaded photo must remain unmistakably the same real people.
@@ -421,6 +422,14 @@ The people in the uploaded photo must remain unmistakably the same real people.
 - Do NOT change ethnicity presentation, facial proportions, perceived age, body fitness level, or grooming style.
 - Do NOT change gaze direction, head angle, smile shape, teeth appearance, facial tension, or natural expression unless the original already shows it.
 - The faces must stay instantly recognizable to someone who knows the original people.
+
+=== PROTECTED HUMAN REGIONS: COPY FROM REFERENCE ===
+Treat the following areas as protected reference pixels and preserve them as if doing a careful Photoshop edit:
+- face, head shape, hair, hairline, ears, neck, exposed skin, hands, fingers, tattoos, scars, moles, glasses, jewelry, facial hair, makeup, and body silhouette.
+- Do not regenerate, repaint, average, idealize, or replace protected regions.
+- Do not invent a cleaner version of the person. Do not make the person more attractive, younger, older, thinner, heavier, more athletic, more symmetrical, happier, or more dramatic.
+- Clothing and background may change; the underlying body, posture, proportions, and identity must remain the same.
+- If the model needs to choose between a perfect World Cup scene and a slightly less spectacular scene that preserves the person, choose the less spectacular scene.
 
 === IDENTITY LOCK INSTRUCTIONS ===
 - Keep the exact same identity even if the input photo is imperfect, low-light, slightly blurry, compressed, close-up, or not studio quality.
@@ -444,6 +453,7 @@ Before applying the stadium, jersey, or trophy edit, visually lock the original 
 - Preserve body type, body proportions, height, hands, arms, legs, and overall anatomy.
 - Preserve exact limb proportions, shoulder width, arm size, hand size, finger count, tattoos on arms or hands, and visible body details.
 - Preserve neck length, trapezius shape, torso width, waist proportion, hip proportion, and overall physical build.
+- Preserve the person's real complexion, weight impression, muscle/fat distribution, posture, shoulder slope, belly/chest shape, and natural clothing fit implied by the original body.
 - Preserve the original camera perspective and subject scale as much as possible.
 - Do NOT turn this into a different body, different person, or different anatomy.
 
@@ -455,13 +465,15 @@ Change only these elements:
 - lighting/color integration required to make the edit believable
 Do not modify identity-defining anatomy beyond what is strictly required for those edits.
 Treat faces, hair, exposed skin, tattoos, scars, moles, jewelry, glasses, hands, and body build as protected subject areas.
+Never change protected subject areas to make the jersey, trophy, camera angle, or stadium composition work better.
 
 === POSE FLEXIBILITY: ONLY MINIMAL AND ONLY IF NEEDED ===
-You may make a very small, natural pose adjustment ONLY if necessary so ONE person can hold the FIFA World Cup Trophy convincingly.
+You may make a very small, natural pose adjustment ONLY if necessary so ONE person can hold or appear next to the FIFA World Cup Trophy convincingly.
 - Allowed: slight hand adjustment, slight wrist adjustment, or slight forearm contact with the trophy.
 - Avoid changing shoulders, torso, neck, head, face, stance, or group arrangement.
 - Not allowed: dramatic new pose, different stance, dance pose, exaggerated movement, major head turn, major body rotation, or changing the group arrangement.
 - If the trophy can be added without changing pose, keep the original pose unchanged.
+- If holding the trophy would require changing fingers, hands, arms, body build, face, expression, or posture, do NOT force a held trophy; place the trophy nearby or partially supported with minimal contact.
 
 === WHAT TO EDIT ===
 1. CLOTHING
@@ -473,10 +485,10 @@ You may make a very small, natural pose adjustment ONLY if necessary so ONE pers
 
 2. TROPHY
    - Add exactly ONE FIFA World Cup Trophy.
-   - The trophy must be held naturally by one real person from the original photo.
+   - The trophy should be held naturally by one real person from the original photo only if this can be done without changing protected human regions.
    - The trophy must match perspective, scale, lighting, and hand placement.
    - The trophy must not cover faces, tattoos, scars, moles, jewelry, hands, or other identity-defining details.
-   - If a convincing trophy hold would require changing the person's identity, body, or pose too much, place the trophy close to the existing hands with minimal contact instead.
+   - If a convincing trophy hold would require changing the person's identity, body, hands, fingers, complexion, or pose too much, place the trophy close to the existing hands with minimal contact instead.
 
 3. BACKGROUND
    - Replace the background with a realistic World Cup stadium celebration scene from field level or near the edge of the pitch, not a generic flat backdrop.
@@ -492,6 +504,7 @@ You may make a very small, natural pose adjustment ONLY if necessary so ONE pers
    - Avoid the feeling of a pasted subject over a generic stadium stock image.
    - Integrate the subject naturally into the environment with coherent scale, lighting, shadows, and color temperature.
    - Do not recompose the uploaded people as if shooting a new portrait. Preserve their original placement and proportions whenever possible.
+   - Do not use camera framing, lens feel, or broadcast style as a reason to redraw faces or reshape bodies.
 
 5. BROADCAST CAMERA LOOK
    - The image should feel like a top-tier live TV sports shot: sharp subject, premium lens rendering, believable stadium lighting, and rich contrast.
@@ -500,6 +513,7 @@ You may make a very small, natural pose adjustment ONLY if necessary so ONE pers
    - Use realistic depth, natural highlight rolloff, and a polished televised finish, not artificial filters.
    - The final image should feel impressive, celebratory, and visually striking without looking fake or overprocessed.
    - Do not smooth, enhance, beautify, or regenerate facial features to match the broadcast style.
+   - Keep face detail faithful to the source even if that means retaining source blur, grain, compression, shadows, or imperfect lighting.
 
 6. CELEBRATION ENERGY
    - Show visible victory atmosphere: confetti bursts, crowd excitement, and players or team figures celebrating in the background when appropriate.
@@ -512,6 +526,7 @@ You may make a very small, natural pose adjustment ONLY if necessary so ONE pers
    - Prefer a wide 16:9 style composition.
    - Do NOT return a portrait or vertical composition.
    - Keep all people fully and naturally framed inside this horizontal composition.
+   - Use background expansion or padding before changing the person's scale, body proportions, head size, or face details.
 
 === VARIATION WITHOUT LOSING IDENTITY ===
 For each generation, vary the scene only after the original people are locked. Vary ONLY these non-identity elements:
@@ -528,6 +543,7 @@ For each generation, vary the scene only after the original people are locked. V
 
 Choose one realistic combination per generation and avoid repeating the exact same composition when another natural option is possible.
 Do not vary face, body, expression, head direction, subject scale, subject placement, tattoos, accessories, or body build.
+Variation is allowed only after identity and body build remain locked to the reference.
 
 === SCENE VARIATION RULE ===
 Use a similar celebration theme every time, but do NOT repeat the exact same stadium layout, same crowd pattern, same trophy angle, same confetti placement, or same camera framing in every result.
