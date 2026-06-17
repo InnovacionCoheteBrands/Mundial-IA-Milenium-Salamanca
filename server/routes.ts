@@ -381,22 +381,46 @@ function getTransformationPromptV2(team: TeamId): string {
 
   return `You are editing a REAL uploaded photo, not creating a new person. Treat the uploaded image as the single source of truth for identity and anatomy. The final result must look like a realistic sports celebration photograph edited from the original photo.
 
+=== CORE RULE ===
+When there is any conflict between identity fidelity and cinematic spectacle, identity fidelity wins every time.
+This is an image edit task, not a face reinterpretation task.
+
 === HIGHEST PRIORITY: PRESERVE IDENTITY EXACTLY ===
 The people in the uploaded photo must remain unmistakably the same real people.
 - Preserve each face exactly: facial structure, eyes, nose, mouth, jawline, cheeks, eyebrows, ears, skin tone, age, expression, and likeness.
 - Preserve hairstyle, hairline, glasses, jewelry, beard, makeup, and visible personal traits.
 - Preserve tattoos, moles, scars, piercings, bracelets, watches, fingernails, and all visible identifying marks.
+- Preserve face width, forehead height, eye spacing, eyelid shape, nose bridge width, nostril shape, lip volume, chin shape, jaw contour, and ear shape.
+- Preserve skin texture, undertones, freckles, beard density, smile lines, and all small asymmetries that make the real person recognizable.
 - Do NOT beautify, stylize, redraw, re-age, de-age, slim, enlarge, or improve the people.
 - Do NOT replace any face, invent any face, blend faces, or make anyone look like a different person.
+- Do NOT change ethnicity presentation, facial proportions, perceived age, body fitness level, or grooming style.
 - The faces must stay instantly recognizable to someone who knows the original people.
+
+=== IDENTITY LOCK INSTRUCTIONS ===
+- Keep the exact same identity even if the input photo is imperfect, low-light, slightly blurry, compressed, close-up, or not studio quality.
+- Do not "correct" the face, symmetry, skin, teeth, nose, eyes, or jaw for aesthetic reasons.
+- Do not reinterpret partially visible features. If some facial or body detail is unclear, preserve the visible evidence and make the least inventive choice.
+- Do not replace natural imperfections with cleaner or more generic-looking versions.
+- If a tattoo, scar, mole, or accessory is visible in the reference, it must remain present in the final image in the same approximate location and scale.
+- If an identifying detail is hidden by the new jersey, pose, or framing, avoid inventing a replacement version elsewhere.
 
 === PRESERVE BODY AND PEOPLE COUNT ===
 - Keep ALL people from the original image.
 - Do NOT add or remove people.
 - Preserve body type, body proportions, height, hands, arms, legs, and overall anatomy.
 - Preserve exact limb proportions, shoulder width, arm size, hand size, finger count, tattoos on arms or hands, and visible body details.
+- Preserve neck length, trapezius shape, torso width, waist proportion, hip proportion, and overall physical build.
 - Preserve the original camera perspective and subject scale as much as possible.
 - Do NOT turn this into a different body, different person, or different anatomy.
+
+=== EDIT BOUNDARY ===
+Change only these elements:
+- clothing into realistic ${teamData.name} jerseys
+- background into a stadium celebration scene
+- one naturally held FIFA World Cup Trophy
+- lighting/color integration required to make the edit believable
+Do not modify identity-defining anatomy beyond what is strictly required for those edits.
 
 === POSE FLEXIBILITY: ONLY MINIMAL AND ONLY IF NEEDED ===
 You may make a very small, natural pose adjustment ONLY if necessary so ONE person can hold the FIFA World Cup Trophy convincingly.
@@ -484,6 +508,9 @@ Each image should feel like a different real photograph taken in the same kind o
 - different face
 - different body
 - synthetic or generic-looking person
+- softened or idealized facial features
+- missing tattoo, missing mole, missing scar, or changed identifying mark
+- changed skin tone or changed facial proportions
 - extra fingers or broken anatomy
 - over-stylized image
 - fake smile or changed expression
