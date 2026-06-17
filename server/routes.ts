@@ -29,7 +29,7 @@ type BrandingAssetPlacement = {
 
 const BRANDING_LAYOUT: BrandingAssetConfig[] = [
   { key: "trophy", maxWidthRatio: 0.08, maxHeightRatio: 0.9 },
-  { key: "salamanca", maxWidthRatio: 0.26, maxHeightRatio: 0.42 },
+  { key: "salamanca", maxWidthRatio: 0.36, maxHeightRatio: 0.58 },
   { key: "milenium", maxWidthRatio: 0.15, maxHeightRatio: 0.94 },
 ];
 
@@ -67,11 +67,20 @@ async function loadBrandingAsset(
 
   const placementPromise = (async () => {
     const assetBuffer = getBrandingSourceBuffer(asset.key);
-    const resizedBuffer = await sharp(assetBuffer)
-      .resize(Math.max(1, Math.round(imageWidth * asset.maxWidthRatio)), Math.max(1, Math.round(contentHeight * asset.maxHeightRatio)), {
+    let resizedAsset = sharp(assetBuffer).resize(
+      Math.max(1, Math.round(imageWidth * asset.maxWidthRatio)),
+      Math.max(1, Math.round(contentHeight * asset.maxHeightRatio)),
+      {
         fit: "inside",
         withoutEnlargement: true,
-      })
+      },
+    );
+
+    if (asset.key === "salamanca") {
+      resizedAsset = resizedAsset.tint({ r: 255, g: 255, b: 255 });
+    }
+
+    const resizedBuffer = await resizedAsset
       .png()
       .toBuffer();
 
@@ -115,39 +124,39 @@ function createBrandingSeparator(height: number): Buffer {
 }
 
 function createBrandingPanel(width: number, height: number): Buffer {
+  const radius = Math.max(6, Math.round(height * 0.12));
+
   return Buffer.from(
     `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="panelGradient" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#052f20" stop-opacity="0.9"/>
-          <stop offset="0.58" stop-color="#07251d" stop-opacity="0.78"/>
-          <stop offset="1" stop-color="#050f0d" stop-opacity="0.66"/>
+          <stop offset="0" stop-color="#070707" stop-opacity="0.78"/>
+          <stop offset="0.52" stop-color="#14100b" stop-opacity="0.7"/>
+          <stop offset="1" stop-color="#070707" stop-opacity="0.78"/>
         </linearGradient>
-        <pattern id="diagonalTexture" width="18" height="18" patternUnits="userSpaceOnUse" patternTransform="rotate(24)">
-          <rect width="18" height="18" fill="transparent"/>
-          <rect x="0" y="0" width="2" height="18" fill="#48b982" opacity="0.18"/>
-        </pattern>
-        <radialGradient id="softLight" cx="18%" cy="35%" r="70%">
-          <stop offset="0" stop-color="#1ed38c" stop-opacity="0.26"/>
-          <stop offset="1" stop-color="#1ed38c" stop-opacity="0"/>
+        <radialGradient id="softLight" cx="50%" cy="40%" r="70%">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.08"/>
+          <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
         </radialGradient>
+        <filter id="panelShadow" x="-5%" y="-35%" width="110%" height="170%">
+          <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.28"/>
+        </filter>
       </defs>
-      <rect width="${width}" height="${height}" fill="url(#panelGradient)"/>
-      <rect width="${width}" height="${height}" fill="url(#softLight)"/>
-      <rect width="${width}" height="${height}" fill="url(#diagonalTexture)"/>
-      <rect y="0" width="${width}" height="1" fill="#ffffff" opacity="0.18"/>
+      <rect width="${width}" height="${height}" rx="${radius}" ry="${radius}" fill="url(#panelGradient)" filter="url(#panelShadow)"/>
+      <rect width="${width}" height="${height}" rx="${radius}" ry="${radius}" fill="url(#softLight)"/>
+      <rect x="1" y="1" width="${Math.max(0, width - 2)}" height="${Math.max(0, height - 2)}" rx="${Math.max(0, radius - 1)}" ry="${Math.max(0, radius - 1)}" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
     </svg>`,
   );
 }
 
-function getBrandingSlotCenterX(assetKey: BrandingAssetKey, imageWidth: number): number {
+function getBrandingSlotCenterX(assetKey: BrandingAssetKey, panelLeft: number, panelWidth: number): number {
   const slotCenters: Record<BrandingAssetKey, number> = {
-    trophy: 0.16,
+    trophy: 0.1,
     salamanca: 0.5,
-    milenium: 0.84,
+    milenium: 0.88,
   };
 
-  return Math.round(imageWidth * slotCenters[assetKey]);
+  return Math.round(panelLeft + panelWidth * slotCenters[assetKey]);
 }
 
 async function normalizeImageToAspectRatio(
@@ -217,14 +226,17 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
 
     const imageWidth = metadata.width;
     const imageHeight = metadata.height;
-    const panelHeight = Math.max(78, Math.round(imageHeight * 0.145));
-    const panelTop = Math.max(0, imageHeight - panelHeight);
-    const paddingX = Math.max(18, Math.round(imageWidth * 0.026));
+    const panelWidth = Math.min(Math.round(imageWidth * 0.6), imageWidth - Math.max(32, Math.round(imageWidth * 0.08)));
+    const panelHeight = Math.max(72, Math.round(imageHeight * 0.115));
+    const panelLeft = Math.max(0, Math.round((imageWidth - panelWidth) / 2));
+    const bottomMargin = Math.max(18, Math.round(imageHeight * 0.047));
+    const panelTop = Math.max(0, imageHeight - panelHeight - bottomMargin);
+    const paddingX = Math.max(14, Math.round(panelWidth * 0.026));
     const paddingY = Math.max(10, Math.round(panelHeight * 0.13));
     const contentHeight = Math.max(1, panelHeight - paddingY * 2);
 
     const assets = await Promise.all(
-      BRANDING_LAYOUT.map((asset) => loadBrandingAsset(asset, imageWidth, contentHeight)),
+      BRANDING_LAYOUT.map((asset) => loadBrandingAsset(asset, panelWidth, contentHeight)),
     );
 
     if (assets.some((asset) => !asset.width || !asset.height)) {
@@ -237,31 +249,34 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
     const shadowOffset = Math.max(3, Math.round(imageWidth * 0.004));
     const overlays: OverlayOptions[] = [
       {
-        input: createBrandingPanel(imageWidth, panelHeight),
-        left: 0,
+        input: createBrandingPanel(panelWidth, panelHeight),
+        left: panelLeft,
         top: panelTop,
       },
     ];
 
-    for (const separatorXRatio of [0.31, 0.69]) {
+    for (const separatorXRatio of [0.18, 0.74]) {
       overlays.push({
         input: separatorBuffer,
-        left: Math.round(imageWidth * separatorXRatio),
+        left: Math.round(panelLeft + panelWidth * separatorXRatio),
         top: panelTop + paddingY + Math.max(0, Math.round((contentHeight - separatorHeight) / 2)),
       });
     }
 
-    for (const [index, asset] of assets.entries()) {
+    for (let index = 0; index < assets.length; index += 1) {
+      const asset = assets[index];
       const assetKey = BRANDING_LAYOUT[index].key;
-      const slotCenterX = getBrandingSlotCenterX(assetKey, imageWidth);
-      const left = Math.max(paddingX, Math.min(imageWidth - paddingX - asset.width, Math.round(slotCenterX - asset.width / 2)));
+      const slotCenterX = getBrandingSlotCenterX(assetKey, panelLeft, panelWidth);
+      const minLeft = panelLeft + paddingX;
+      const maxLeft = panelLeft + panelWidth - paddingX - asset.width;
+      const left = Math.max(minLeft, Math.min(maxLeft, Math.round(slotCenterX - asset.width / 2)));
       const top = panelTop + paddingY + Math.max(0, Math.round((contentHeight - asset.height) / 2));
       const shadowBuffer = await createBrandingShadowBuffer(asset.buffer, asset.width, asset.height);
 
       overlays.push({
         input: shadowBuffer,
-        left: Math.min(imageWidth - paddingX - asset.width, left + shadowOffset),
-        top: Math.min(imageHeight - paddingY - asset.height, top + shadowOffset),
+        left: Math.min(panelLeft + panelWidth - paddingX - asset.width, left + shadowOffset),
+        top: Math.min(panelTop + panelHeight - paddingY - asset.height, top + shadowOffset),
       });
       overlays.push({
         input: asset.buffer,
