@@ -28,34 +28,80 @@ type BrandingAssetPlacement = {
 };
 
 const BRANDING_LAYOUT: BrandingAssetConfig[] = [
-  { key: "milenium", maxWidthRatio: 0.28, maxHeightRatio: 0.5 },
-  { key: "salamanca", maxWidthRatio: 0.24, maxHeightRatio: 0.46 },
-  { key: "trophy", maxWidthRatio: 0.14, maxHeightRatio: 0.68 },
+  { key: "milenium", maxWidthRatio: 0.3, maxHeightRatio: 0.54 },
+  { key: "salamanca", maxWidthRatio: 0.26, maxHeightRatio: 0.5 },
+  { key: "trophy", maxWidthRatio: 0.15, maxHeightRatio: 0.72 },
 ];
 
 const TARGET_OUTPUT_ASPECT_RATIO = 16 / 9;
+const brandingSourceBufferCache = new Map<BrandingAssetKey, Buffer>();
+const brandingPlacementCache = new Map<string, Promise<BrandingAssetPlacement>>();
+
+function getBrandingPlacementCacheKey(asset: BrandingAssetConfig, imageWidth: number, contentHeight: number) {
+  return `${asset.key}:${imageWidth}:${contentHeight}`;
+}
+
+function getBrandingSourceBuffer(assetKey: BrandingAssetKey): Buffer {
+  const cachedBuffer = brandingSourceBufferCache.get(assetKey);
+
+  if (cachedBuffer) {
+    return cachedBuffer;
+  }
+
+  const sourceBuffer = fs.readFileSync(BRANDING_ASSETS[assetKey]);
+  brandingSourceBufferCache.set(assetKey, sourceBuffer);
+  return sourceBuffer;
+}
 
 async function loadBrandingAsset(
   asset: BrandingAssetConfig,
   imageWidth: number,
   contentHeight: number,
 ): Promise<BrandingAssetPlacement> {
-  const assetBuffer = fs.readFileSync(BRANDING_ASSETS[asset.key]);
-  const resizedBuffer = await sharp(assetBuffer)
-    .resize(Math.max(1, Math.round(imageWidth * asset.maxWidthRatio)), Math.max(1, Math.round(contentHeight * asset.maxHeightRatio)), {
+  const cacheKey = getBrandingPlacementCacheKey(asset, imageWidth, contentHeight);
+  const cachedPlacement = brandingPlacementCache.get(cacheKey);
+
+  if (cachedPlacement) {
+    return cachedPlacement;
+  }
+
+  const placementPromise = (async () => {
+    const assetBuffer = getBrandingSourceBuffer(asset.key);
+    const resizedBuffer = await sharp(assetBuffer)
+      .resize(Math.max(1, Math.round(imageWidth * asset.maxWidthRatio)), Math.max(1, Math.round(contentHeight * asset.maxHeightRatio)), {
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .png()
+      .toBuffer();
+
+    const resizedMetadata = await sharp(resizedBuffer).metadata();
+
+    return {
+      buffer: resizedBuffer,
+      width: resizedMetadata.width || 0,
+      height: resizedMetadata.height || 0,
+    };
+  })().catch((error) => {
+    brandingPlacementCache.delete(cacheKey);
+    throw error;
+  });
+
+  brandingPlacementCache.set(cacheKey, placementPromise);
+  return placementPromise;
+}
+
+async function createBrandingShadowBuffer(assetBuffer: Buffer, width: number, height: number): Promise<Buffer> {
+  return sharp(assetBuffer)
+    .resize(width, height, {
       fit: "inside",
       withoutEnlargement: true,
     })
+    .ensureAlpha()
+    .linear([0, 0, 0, 0.28], [0, 0, 0, 0])
+    .blur(5)
     .png()
     .toBuffer();
-
-  const resizedMetadata = await sharp(resizedBuffer).metadata();
-
-  return {
-    buffer: resizedBuffer,
-    width: resizedMetadata.width || 0,
-    height: resizedMetadata.height || 0,
-  };
 }
 
 async function normalizeImageToAspectRatio(
@@ -127,9 +173,7 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
     const imageHeight = metadata.height;
     const paddingX = Math.max(24, Math.round(imageWidth * 0.035));
     const paddingY = Math.max(16, Math.round(imageHeight * 0.02));
-    const bandHeight = Math.max(72, Math.round(imageHeight * 0.14));
-    const bandTop = Math.max(paddingY, imageHeight - bandHeight - paddingY);
-    const contentHeight = Math.max(1, bandHeight - paddingY * 2);
+    const contentHeight = Math.max(72, Math.round(imageHeight * 0.14));
 
     const assets = await Promise.all(
       BRANDING_LAYOUT.map((asset) => loadBrandingAsset(asset, imageWidth, contentHeight)),
@@ -141,10 +185,11 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
     }
 
     const availableWidth = Math.max(1, imageWidth - paddingX * 2);
-    const baseGap = Math.max(16, Math.round(imageWidth * 0.02));
+    const baseGap = Math.max(18, Math.round(imageWidth * 0.018));
     const totalAssetsWidth = assets.reduce((sum, asset) => sum + asset.width, 0);
     const totalGapWidth = baseGap * (assets.length - 1);
-    const scaleFactor = Math.min(1, availableWidth / (totalAssetsWidth + totalGapWidth));
+    const maxClusterWidth = Math.min(availableWidth, Math.round(imageWidth * 0.52));
+    const scaleFactor = Math.min(1, maxClusterWidth / (totalAssetsWidth + totalGapWidth));
 
     const scaledAssets = await Promise.all(
       assets.map(async (asset) => {
@@ -168,28 +213,22 @@ async function addBrandingToImage(imageBase64: string): Promise<string> {
       }),
     );
 
-    const finalAssetsWidth = scaledAssets.reduce((sum, asset) => sum + asset.width, 0);
-    const finalGapWidth = scaledAssets.length > 1
-      ? Math.max(baseGap, Math.floor((availableWidth - finalAssetsWidth) / (scaledAssets.length - 1)))
-      : 0;
-    const contentWidth = finalAssetsWidth + finalGapWidth * (scaledAssets.length - 1);
-    const startX = Math.max(paddingX, Math.round((imageWidth - contentWidth) / 2));
-
-    let currentX = startX;
-    const overlays: OverlayOptions[] = [
-      {
-        input: Buffer.from(
-          `<svg width="${availableWidth}" height="${bandHeight}" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100%" height="100%" rx="${Math.round(bandHeight * 0.18)}" fill="rgba(8,21,15,0.82)"/>
-          </svg>`,
-        ),
-        left: paddingX,
-        top: bandTop,
-      },
-    ];
+    const finalGapWidth = baseGap;
+    const clusterHeight = scaledAssets.reduce((maxHeight, asset) => Math.max(maxHeight, asset.height), 0);
+    const clusterTop = Math.max(paddingY, imageHeight - clusterHeight - paddingY);
+    const shadowOffset = Math.max(3, Math.round(imageWidth * 0.004));
+    let currentX = paddingX;
+    const overlays: OverlayOptions[] = [];
 
     for (const asset of scaledAssets) {
-      const top = bandTop + Math.max(0, Math.round((bandHeight - asset.height) / 2));
+      const top = clusterTop + Math.max(0, Math.round((clusterHeight - asset.height) / 2));
+      const shadowBuffer = await createBrandingShadowBuffer(asset.buffer, asset.width, asset.height);
+
+      overlays.push({
+        input: shadowBuffer,
+        left: Math.min(imageWidth - asset.width, currentX + shadowOffset),
+        top: Math.min(imageHeight - asset.height, top + shadowOffset),
+      });
       overlays.push({
         input: asset.buffer,
         left: currentX,

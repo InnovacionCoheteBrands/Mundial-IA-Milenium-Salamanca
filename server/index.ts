@@ -6,6 +6,36 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+function summarizeJsonForLog(value: unknown, depth = 0): unknown {
+  if (typeof value === "string") {
+    if (value.startsWith("data:image/")) {
+      return `[image data url length=${value.length}]`;
+    }
+
+    return value.length > 240 ? `${value.slice(0, 240)}...[truncated ${value.length - 240} chars]` : value;
+  }
+
+  if (value === null || value === undefined || typeof value !== "object") {
+    return value;
+  }
+
+  if (depth >= 2) {
+    return Array.isArray(value) ? `[array length=${value.length}]` : "[object]";
+  }
+
+  if (Array.isArray(value)) {
+    return value.slice(0, 5).map((item) => summarizeJsonForLog(item, depth + 1));
+  }
+
+  const summary: Record<string, unknown> = {};
+
+  for (const [key, nestedValue] of Object.entries(value)) {
+    summary[key] = summarizeJsonForLog(nestedValue, depth + 1);
+  }
+
+  return summary;
+}
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -37,11 +67,11 @@ export function log(message: string, source = "express") {
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJsonResponse: unknown = undefined;
 
   const originalResJson = res.json;
   res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
+    capturedJsonResponse = summarizeJsonForLog(bodyJson);
     return originalResJson.apply(res, [bodyJson, ...args]);
   };
 

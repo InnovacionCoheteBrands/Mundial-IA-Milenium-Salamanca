@@ -4,9 +4,21 @@ import { type Server } from "http";
 import viteConfig from "../vite.config";
 import fs from "fs";
 import path from "path";
-import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
+let cachedTemplate = "";
+let cachedTemplateMtimeMs = 0;
+
+async function getClientTemplate(clientTemplatePath: string) {
+  const templateStat = await fs.promises.stat(clientTemplatePath);
+
+  if (!cachedTemplate || templateStat.mtimeMs !== cachedTemplateMtimeMs) {
+    cachedTemplate = await fs.promises.readFile(clientTemplatePath, "utf-8");
+    cachedTemplateMtimeMs = templateStat.mtimeMs;
+  }
+
+  return cachedTemplate;
+}
 
 export async function setupVite(server: Server, app: Express) {
   const serverOptions = {
@@ -42,12 +54,7 @@ export async function setupVite(server: Server, app: Express) {
         "index.html",
       );
 
-      // always reload the index.html file from disk incase it changes
-      let template = await fs.promises.readFile(clientTemplate, "utf-8");
-      template = template.replace(
-        `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`,
-      );
+      const template = await getClientTemplate(clientTemplate);
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
