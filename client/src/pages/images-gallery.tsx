@@ -75,14 +75,14 @@ export default function ImagesGallery() {
         <main className="min-h-0 flex-1 overflow-y-auto px-3 pb-2 sm:px-4 sm:pb-3 md:px-8">
           <div className="mx-auto max-w-6xl">
             {isLoading ? (
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="aspect-square w-full rounded-xl bg-green-900/40"
-                  />
-                ))}
-              </div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <Skeleton
+                      key={i}
+                      className="aspect-video w-full rounded-xl bg-green-900/40 md:aspect-square"
+                    />
+                  ))}
+                </div>
             ) : !transformations || transformations.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <ImageIcon className="mb-4 h-16 w-16 text-green-400/50" />
@@ -99,7 +99,7 @@ export default function ImagesGallery() {
                   {transformations.length} imágenes guardadas
                 </p>
 
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                   {transformations.map((transformation) => {
                     const team = transformation.team as TeamId;
                     const teamData = teamInfo[team];
@@ -107,13 +107,13 @@ export default function ImagesGallery() {
                     return (
                       <Card
                         key={transformation.id}
-                        className="group relative aspect-square overflow-hidden border-green-700/30 bg-green-950/60"
+                        className="group relative aspect-video overflow-hidden border-green-700/30 bg-green-950/60 md:aspect-square"
                         data-testid={`card-image-${transformation.id}`}
                       >
                         <img
                           src={transformation.transformedImageUrl}
                           alt={`Fan de ${teamData?.name || team}`}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full bg-black/20 object-contain md:object-cover"
                           loading="lazy"
                         />
 
